@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JobRec — Employer Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#f1f5f9;color:#0f172a;min-height:100vh;display:flex}
+.sidebar{width:230px;min-height:100vh;background:#0f172a;position:fixed;top:0;left:0;display:flex;flex-direction:column;z-index:50}
+.sb-brand{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px}
+.sb-logo{width:36px;height:36px;border-radius:10px;background:#7c3aed;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;flex-shrink:0}
+.sb-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;color:#fff}.sb-sub{font-size:.68rem;color:rgba(255,255,255,.3)}
+.sb-user{margin:10px;background:rgba(255,255,255,.05);border-radius:10px;padding:11px 13px;display:flex;align-items:center;gap:9px}
+.sb-av{width:34px;height:34px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:#fff;flex-shrink:0}
+.sb-uname{font-size:.82rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}.sb-urole{font-size:.67rem;color:rgba(255,255,255,.35)}
+.sb-nav{flex:1;padding:8px 10px}.sb-lbl{font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.22);padding:10px 10px 4px;font-weight:600}
+.sb-link{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;color:rgba(255,255,255,.55);font-size:.86rem;font-weight:500;text-decoration:none;margin-bottom:2px;transition:.15s}
+.sb-link i{font-size:.9rem;width:16px;text-align:center;flex-shrink:0}
+.sb-link:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9)}.sb-link.active{background:rgba(124,58,237,.25);color:#c4b5fd}
+.sb-foot{padding:10px}.sb-out{width:100%;display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;border:none;background:none;color:rgba(255,255,255,.35);font-size:.86rem;font-weight:500;cursor:pointer;font-family:inherit;transition:.15s}
+.sb-out:hover{background:rgba(239,68,68,.15);color:#fca5a5}
+.main{margin-left:230px;flex:1;padding:28px 30px}
+.welcome{background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:16px;padding:26px 30px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;gap:16px;position:relative;overflow:hidden}
+.welcome::before{content:'';position:absolute;right:-50px;top:-50px;width:200px;height:200px;border-radius:50%;background:rgba(124,58,237,.15)}
+.welcome-text h2{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:#fff;margin-bottom:5px}
+.welcome-text p{color:rgba(255,255,255,.45);font-size:.875rem}
+.welcome-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px 20px;color:#fff;font-size:.875rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:none;display:flex;align-items:center;gap:7px;position:relative;z-index:1;white-space:nowrap;transition:.2s}
+.welcome-btn:hover{background:rgba(255,255,255,.18)}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px}
+.stat-card{background:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:14px;border-left:4px solid}
+.stat-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.stat-num{font-family:'Syne',sans-serif;font-size:1.55rem;font-weight:800;line-height:1}
+.stat-label{font-size:.75rem;color:#64748b;margin-top:3px;font-weight:500}
+.quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.quick-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:12px;text-decoration:none;transition:.2s;border:1.5px solid #e2e8f0}
+.quick-card:hover{border-color:#ede9fe;transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.08)}
+.qi{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0}
+.qt{font-weight:700;font-size:.88rem;color:#0f172a}.qs{font-size:.74rem;color:#64748b}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sb-brand"><div class="sb-logo"><i class="bi bi-building-fill"></i></div><div><div class="sb-title">JobRec</div><div class="sb-sub">Employer Portal</div></div></div>
+  <div class="sb-user"><div class="sb-av" id="sbAv">E</div><div><div class="sb-uname" id="sbName">Loading…</div><div class="sb-urole">Employer</div></div></div>
+  <nav class="sb-nav">
+    <div class="sb-lbl">Manage</div>
+    <a href="dashboard.html"  class="sb-link active"><i class="bi bi-speedometer2"></i>Dashboard</a>
+    <a href="post-job.html"   class="sb-link"><i class="bi bi-plus-circle"></i>Post a Job</a>
+    <a href="my-jobs.html"    class="sb-link"><i class="bi bi-briefcase"></i>My Jobs</a>
+    <a href="applicants.html" class="sb-link"><i class="bi bi-people"></i>Applicants</a>
+    <a href="profile.html"    class="sb-link"><i class="bi bi-building"></i>Company Profile</a>
+  </nav>
+  <div class="sb-foot"><button class="sb-out" onclick="doLogout()"><i class="bi bi-box-arrow-left" style="width:16px"></i>Sign Out</button></div>
+</aside>
+
+<main class="main">
+  <div class="welcome">
+    <div class="welcome-text" style="position:relative;z-index:1">
+      <h2 id="greet">Welcome back 👋</h2>
+      <p id="compLabel">Manage your job postings and review applicants</p>
+    </div>
+    <a href="post-job.html" class="welcome-btn"><i class="bi bi-plus-circle"></i>Post New Job</a>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card" style="border-color:#7c3aed">
+      <div class="stat-icon" style="background:#ede9fe"><i class="bi bi-briefcase" style="color:#7c3aed"></i></div>
+      <div><div class="stat-num" id="s1">–</div><div class="stat-label">Total Posted</div></div>
+    </div>
+    <div class="stat-card" style="border-color:#059669">
+      <div class="stat-icon" style="background:#d1fae5"><i class="bi bi-check-circle" style="color:#059669"></i></div>
+      <div><div class="stat-num" id="s2">–</div><div class="stat-label">Approved</div></div>
+    </div>
+    <div class="stat-card" style="border-color:#d97706">
+      <div class="stat-icon" style="background:#fef3c7"><i class="bi bi-hourglass-split" style="color:#d97706"></i></div>
+      <div><div class="stat-num" id="s3">–</div><div class="stat-label">Pending</div></div>
+    </div>
+  </div>
+
+  <div style="font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;margin-bottom:14px">Quick Access</div>
+  <div class="quick-grid">
+    <a href="post-job.html"   class="quick-card"><div class="qi" style="background:#ede9fe"><i class="bi bi-plus-circle" style="color:#7c3aed"></i></div><div><div class="qt">Post a Job</div><div class="qs">Create opening</div></div></a>
+    <a href="my-jobs.html"    class="quick-card"><div class="qi" style="background:#dbeafe"><i class="bi bi-briefcase" style="color:#2563eb"></i></div><div><div class="qt">My Jobs</div><div class="qs">View & manage</div></div></a>
+    <a href="applicants.html" class="quick-card"><div class="qi" style="background:#d1fae5"><i class="bi bi-people" style="color:#059669"></i></div><div><div class="qt">Applicants</div><div class="qs">Review candidates</div></div></a>
+    <a href="profile.html"    class="quick-card"><div class="qi" style="background:#fef3c7"><i class="bi bi-building" style="color:#d97706"></i></div><div><div class="qt">Company Profile</div><div class="qs">Update info</div></div></a>
+  </div>
+</main>
+
+<script>
+const API = "http://localhost:5000/api";
+function getUser(){ const u=localStorage.getItem("jobrec_user");return u?JSON.parse(u):null; }
+function doLogout(){ localStorage.removeItem("jobrec_user");window.location.href="../index.html"; }
+async function apiFetch(ep,method="GET",body=null){
+    const opts={method,headers:{"Content-Type":"application/json"}};
+    if(body)opts.body=JSON.stringify(body);
+    const res=await fetch(API+ep,opts);const d=await res.json();
+    if(!res.ok)throw new Error(d.message||"Error");return d;
+}
+window.onload = async () => {
+    const user = getUser();
+    if (!user || user.role !== "Employer") { window.location.href="../index.html"; return; }
+    const h = new Date().getHours();
+    document.getElementById("greet").textContent = `${h<12?"Good morning":h<17?"Good afternoon":"Good evening"}, ${user.companyName||user.username} 👋`;
+    document.getElementById("compLabel").textContent = user.companyName ? `Managing jobs for ${user.companyName}` : "Manage your job postings";
+    document.getElementById("sbName").textContent = user.companyName || user.username;
+    document.getElementById("sbAv").textContent   = (user.companyName || user.username || "E")[0].toUpperCase();
+    try {
+        const jobs = await apiFetch(`/job/employer/${user.profileId}`);
+        document.getElementById("s1").textContent = jobs.length;
+        document.getElementById("s2").textContent = jobs.filter(j=>j.status==="Approved").length;
+        document.getElementById("s3").textContent = jobs.filter(j=>j.status==="Pending").length;
+    } catch(e) {}
+};
+</script>
+</body>
+</html>
