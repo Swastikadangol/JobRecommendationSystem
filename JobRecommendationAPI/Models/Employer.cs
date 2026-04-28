@@ -15,8 +15,6 @@ namespace JobRecommendationAPI.Models
         public User? User { get; set; }
         public string CompanyName { get; set; } = string.Empty;
 
-        public string? CompanyWebsite { get; set; }
-        public string? CompanyDetails { get; set; }
         public string? CompanyNumber { get; set; }
         public DateTime ProfileCreatedAt { get; set; } = DateTime.Now;
         

@@ -26,12 +26,12 @@ namespace JobRecommendationAPI.Repositories.Implementation
         //get all non-admin users, newest first
         public async Task<IEnumerable<User>> GetAllAsync() =>
             await _db.Users
-            .Where(u => u.Role != "Admin")
+            .Where(u => u.Role != Role.Admin)
             .OrderByDescending(u => u.CreatedAt)
             .ToListAsync();
 
         //get all users f specific role, newest first
-        public async Task<IEnumerable<User>> GetByRoleAsync(string role) =>
+        public async Task<IEnumerable<User>> GetByRoleAsync(Role role) =>
             await _db.Users
             .Where(u => u.Role == role)
             .OrderByDescending(u => u.CreatedAt)
@@ -64,7 +64,7 @@ namespace JobRecommendationAPI.Repositories.Implementation
         }
 
        //check if email is already registered to prevent duplicates
-       public async Task<bool> EmailExistAsync(string email) =>
+       public async Task<bool> EmailExistsAsync(string email) =>
             await _db.Users.AnyAsync(u => u.Email == email);
 
         //flip status between active and inactive, return false if user not found
@@ -72,13 +72,13 @@ namespace JobRecommendationAPI.Repositories.Implementation
         {
             var user = await _db.Users.FindAsync(id);
             if (user == null) return false;
-            user.Status = user.Status == "Active" ? "Inactive" : "Active";
+            user.Status = user.Status == UserStatus.Active ? UserStatus.Inactive : UserStatus.Active;
             await _db.SaveChangesAsync();
             return true;
         }
 
         //count total users belonging to a specific role
-        public async Task<int> CountByRoleAsync(string role) =>
+        public async Task<int> CountByRoleAsync(Role role) =>
             await _db.Users.CountAsync(u => u.Role == role);
 
 

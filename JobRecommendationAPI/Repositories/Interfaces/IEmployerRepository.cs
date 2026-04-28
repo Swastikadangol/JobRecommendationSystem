@@ -10,5 +10,18 @@
         Task<Employer> CreateAsync(Employer employer);
         //update existing employer profile data
         Task<Employer> UpdateAsync(Employer employer);
+
+
+        // JOB MANAGEMENT (important)
+        Task<IEnumerable<Job>> GetJobsByEmployerAsync(int employerId);
+        Task<int> CountJobsAsync(int employerId);
+
+        // APPLICATION INSIGHTS
+        Task<int> GetTotalApplicationsAsync(int employerId);
+        Task<IEnumerable<Application>> GetApplicationsByEmployerAsync(int employerId);
+
+
+
+
     }
 }

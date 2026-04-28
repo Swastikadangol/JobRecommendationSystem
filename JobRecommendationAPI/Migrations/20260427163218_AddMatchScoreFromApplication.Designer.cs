@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace JobRecommendationAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260315163705_initialcreate")]
-    partial class initialcreate
+    [Migration("20260427163218_AddMatchScoreFromApplication")]
+    partial class AddMatchScoreFromApplication
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,9 +33,8 @@ namespace JobRecommendationAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ApplicationId"));
 
-                    b.Property<string>("ApplicationStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("ApplicationStatus")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("AppliedAt")
                         .HasColumnType("datetime2");
@@ -66,17 +65,11 @@ namespace JobRecommendationAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EmployerId"));
 
-                    b.Property<string>("CompanyDetails")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CompanyName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CompanyNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CompanyWebsite")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("ProfileCreatedAt")
@@ -93,6 +86,41 @@ namespace JobRecommendationAPI.Migrations
                     b.ToTable("Employers");
                 });
 
+            modelBuilder.Entity("JobRecommendationAPI.Models.Experience", b =>
+                {
+                    b.Property<int>("ExperienceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ExperienceId"));
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("JobSeekerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("JobTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ExperienceId");
+
+                    b.HasIndex("JobSeekerId");
+
+                    b.ToTable("Experiences");
+                });
+
             modelBuilder.Entity("JobRecommendationAPI.Models.Job", b =>
                 {
                     b.Property<int>("JobId")
@@ -101,14 +129,11 @@ namespace JobRecommendationAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("JobId"));
 
-                    b.Property<string>("Deadline")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime?>("Deadline")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("EmployerId")
                         .HasColumnType("int");
-
-                    b.Property<string>("ExperienceRequired")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -120,29 +145,33 @@ namespace JobRecommendationAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("JobType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("JobType")
+                        .HasColumnType("int");
 
                     b.Property<string>("Location")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("MinYearsExperience")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MinimumEducationLevel")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("PostedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Qualification")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RequiredSkills")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("SalarayRange")
+                    b.Property<string>("SalaryRange")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WorkMode")
+                        .HasColumnType("int");
 
                     b.HasKey("JobId");
 
@@ -159,27 +188,24 @@ namespace JobRecommendationAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("JobSeekerId"));
 
-                    b.Property<string>("Education")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Experience")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("EducationLevel")
+                        .HasColumnType("int");
 
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Interests")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Phone")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("PreferredJobType")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PreferredWorkMode")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("ProfileCreatedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Resume")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Skills")
                         .HasColumnType("nvarchar(max)");
@@ -276,6 +302,17 @@ namespace JobRecommendationAPI.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("JobRecommendationAPI.Models.Experience", b =>
+                {
+                    b.HasOne("JobRecommendationAPI.Models.JobSeeker", "JobSeeker")
+                        .WithMany("Experiences")
+                        .HasForeignKey("JobSeekerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("JobSeeker");
+                });
+
             modelBuilder.Entity("JobRecommendationAPI.Models.Job", b =>
                 {
                     b.HasOne("JobRecommendationAPI.Models.Employer", "Employer")
@@ -311,6 +348,8 @@ namespace JobRecommendationAPI.Migrations
             modelBuilder.Entity("JobRecommendationAPI.Models.JobSeeker", b =>
                 {
                     b.Navigation("Applications");
+
+                    b.Navigation("Experiences");
                 });
 
             modelBuilder.Entity("JobRecommendationAPI.Models.User", b =>

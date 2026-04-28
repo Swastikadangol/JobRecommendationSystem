@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using JobRecommendationAPI.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace JobRecommendationAPI.Models
@@ -18,7 +19,7 @@ namespace JobRecommendationAPI.Models
         public JobSeeker? JobSeeker { get; set; }
 
         //applied, reviewed, accepted, rejected
-        public string ApplicationStatus { get; set; } = "Applied";
+        public ApplicationStatus  ApplicationStatus { get; set; } = ApplicationStatus.Applied;
         public double MatchScore{ get; set; } = 0;
         public DateTime AppliedAt { get; set; } = DateTime.Now;
 

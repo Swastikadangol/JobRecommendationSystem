@@ -4,6 +4,5 @@
     {
         public int JobId { get; set; }
         public int JobSeekerId { get; set; }
-        public double MatchScore { get; set; }
     }
 }

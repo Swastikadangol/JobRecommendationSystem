@@ -66,7 +66,7 @@ namespace JobRecommendationAPI.Repositories.Implementation
         }
 
         //update/set the status of the application ie jobseeker applied the job that make application and the stsus is changed by the employer like approved rejected 
-        public async Task<bool> UpdateStatusAsync(int id, string status)
+        public async Task<bool> UpdateStatusAsync(int id, ApplicationStatus status)
         {
             var app = await _db.Applications.FindAsync(id);
             if (app == null) return false;

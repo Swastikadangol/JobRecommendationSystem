@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using JobRecommendationAPI.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace JobRecommendationAPI.Models
 {
@@ -13,10 +14,12 @@ namespace JobRecommendationAPI.Models
         [Required]
         public string Password { get; set; } = string.Empty;
         //JobSeeker, Employer, Admin
-        [Required]
-        public string Role { get; set; } = string.Empty;
-        //Active, Inactive
-        public string Status { get; set; } = "Active";
+
+        public Role Role { get; set; } = Role.JobSeeker;
+
+        public UserStatus Status { get; set; } = UserStatus.Active;
+       
+      
         public DateTime CreatedAt {  get; set; }= DateTime.Now;
 
        //navigation- one user has one profile

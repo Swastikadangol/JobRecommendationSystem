@@ -14,15 +14,17 @@ namespace JobRecommendationAPI.Repositories.Implementation
         }
 
         //find jobseeker by their own id, includes linked user account data
-        public async Task<JobSeeker?> GetByIdAsync(int id) =>
+        public async Task<JobSeeker?> GetByIdAsync(int jobseekerId) =>
             await _db.JobSeekers
             .Include(js => js.User)
-            .FirstOrDefaultAsync(js => js.JobSeekerId == id);
+            .Include(js => js.Experiences)
+            .FirstOrDefaultAsync(js => js.JobSeekerId == jobseekerId);
 
         //find jobseeker by their linked user account id, inclcudes user data
         public async Task<JobSeeker?> GetByUserIdAsync(int userId) =>
             await _db.JobSeekers
             .Include(js => js.User)
+            .Include(js => js.Experiences)
             .FirstOrDefaultAsync(js => js.UserId == userId);
 
         //create a new jobseeker to db and reurn saved entity
@@ -39,6 +41,43 @@ namespace JobRecommendationAPI.Repositories.Implementation
             _db.JobSeekers.Update(jobSeeker);
             await _db.SaveChangesAsync();
             return jobSeeker;
+        }
+
+        //experience
+        public async Task<Experience> AddExperienceAsync(int jobSeekerId,Experience experience)
+        {
+            experience.JobSeekerId = jobSeekerId;
+
+            _db.Experiences.Add(experience);
+            await _db.SaveChangesAsync();
+            return experience;
+        }
+
+        public async Task<Experience?> GetExperienceByIdAsync(int experienceId) =>
+          await _db.Experiences.FindAsync(experienceId);
+
+        public async Task<IEnumerable<Experience>> GetExperiencesByJobSeekerIdAsync(int jobSeekerId)
+        {
+            return await _db.Experiences
+                .Where(e => e.JobSeekerId == jobSeekerId)
+                .OrderByDescending(e => e.StartDate)
+                .ToListAsync();
+        }
+
+        public async Task<Experience> UpdateExperienceAsync(Experience experience)
+        {
+            _db.Experiences.Update(experience);
+            await _db.SaveChangesAsync();
+            return experience;
+        }
+
+        public async Task<bool> DeleteExperienceAsync(int experienceId)
+        {
+            var exp = await _db.Experiences.FindAsync(experienceId);
+            if (exp == null) return false;
+            _db.Experiences.Remove(exp);
+            await _db.SaveChangesAsync();
+            return true;
         }
     }
 }

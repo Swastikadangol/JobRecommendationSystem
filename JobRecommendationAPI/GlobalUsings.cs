@@ -12,5 +12,6 @@ global using JobRecommendationAPI.DTOs.Application;
 global using JobRecommendationAPI.DTOs.Profile;
 global using JobRecommendationAPI.Models;
 global using JobRecommendationAPI.Data;
+global using JobRecommendationAPI.Enums;
 //global using JobRecommendationAPI.Repositories.Interfaces;
 //global using JobRecommendationAPI.Services.Interfaces;

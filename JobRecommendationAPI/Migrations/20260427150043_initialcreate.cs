@@ -37,8 +37,6 @@ namespace JobRecommendationAPI.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UserId = table.Column<int>(type: "int", nullable: false),
                     CompanyName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CompanyWebsite = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CompanyDetails = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CompanyNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ProfileCreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -62,11 +60,10 @@ namespace JobRecommendationAPI.Migrations
                     UserId = table.Column<int>(type: "int", nullable: false),
                     FullName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Phone = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Resume = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Skills = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Education = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Experience = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Interests = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EducationLevel = table.Column<int>(type: "int", nullable: true),
+                    PreferredJobType = table.Column<int>(type: "int", nullable: true),
+                    PreferredWorkMode = table.Column<int>(type: "int", nullable: true),
                     ProfileCreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -89,14 +86,15 @@ namespace JobRecommendationAPI.Migrations
                     EmployerId = table.Column<int>(type: "int", nullable: false),
                     JobTitle = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     JobDescription = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    JobType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    JobType = table.Column<int>(type: "int", nullable: false),
+                    WorkMode = table.Column<int>(type: "int", nullable: false),
                     RequiredSkills = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Location = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SalarayRange = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Qualification = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ExperienceRequired = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Deadline = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SalaryRange = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MinimumEducationLevel = table.Column<int>(type: "int", nullable: true),
+                    MinYearsExperience = table.Column<int>(type: "int", nullable: true),
+                    Deadline = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     PostedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -112,6 +110,30 @@ namespace JobRecommendationAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Experiences",
+                columns: table => new
+                {
+                    ExperienceId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    JobSeekerId = table.Column<int>(type: "int", nullable: false),
+                    JobTitle = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CompanyName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Experiences", x => x.ExperienceId);
+                    table.ForeignKey(
+                        name: "FK_Experiences_JobSeekers_JobSeekerId",
+                        column: x => x.JobSeekerId,
+                        principalTable: "JobSeekers",
+                        principalColumn: "JobSeekerId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Applications",
                 columns: table => new
                 {
@@ -119,7 +141,7 @@ namespace JobRecommendationAPI.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     JobId = table.Column<int>(type: "int", nullable: false),
                     JobSeekerId = table.Column<int>(type: "int", nullable: false),
-                    ApplicationStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ApplicationStatus = table.Column<int>(type: "int", nullable: false),
                     MatchScore = table.Column<double>(type: "float", nullable: false),
                     AppliedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -161,6 +183,11 @@ namespace JobRecommendationAPI.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Experiences_JobSeekerId",
+                table: "Experiences",
+                column: "JobSeekerId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Jobs_EmployerId",
                 table: "Jobs",
                 column: "EmployerId");
@@ -185,10 +212,13 @@ namespace JobRecommendationAPI.Migrations
                 name: "Applications");
 
             migrationBuilder.DropTable(
-                name: "JobSeekers");
+                name: "Experiences");
 
             migrationBuilder.DropTable(
                 name: "Jobs");
+
+            migrationBuilder.DropTable(
+                name: "JobSeekers");
 
             migrationBuilder.DropTable(
                 name: "Employers");

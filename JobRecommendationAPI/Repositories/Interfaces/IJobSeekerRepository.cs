@@ -13,8 +13,14 @@
 
         //update jobseeker profile data(name, phone, resuje, skills ect)
         Task<JobSeeker> UpdateAsync(JobSeeker jobSeeker);
-        
-        
+
+        // Experience
+        Task<Experience> AddExperienceAsync(int jobSeekerId, Experience experience);
+        Task<Experience?> GetExperienceByIdAsync(int experienceId);
+        Task<IEnumerable<Experience>> GetExperiencesByJobSeekerIdAsync(int jobSeekerId);
+        Task<Experience> UpdateExperienceAsync(Experience experience);
+        Task<bool> DeleteExperienceAsync(int experienceId);
+
     }
 }
 

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using JobRecommendationAPI.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace JobRecommendationAPI.Models
@@ -16,16 +17,17 @@ namespace JobRecommendationAPI.Models
         public string? JobDescription { get; set; }
 
     //FullTime, PartTime, Internship
-        public string JobType { get; set; } = "FullTime";
+        public JobType JobType { get; set; } = JobType.FullTime;
+        public WorkMode WorkMode { get; set; } = WorkMode.OnSite;
         [Required]
         public string RequiredSkills { get; set; } = string.Empty;
         public string? Location { get; set; }
         public string? SalaryRange { get; set; }
-        public string? Qualification { get; set; }
-        public string? ExperienceRequired { get; set; }
-        public string? Deadline { get; set; }
+        public EducationLevel? MinimumEducationLevel { get; set; }
+        public int? MinYearsExperience { get; set; }
+        public DateTime? Deadline { get; set; }
         //Pending, Approved, Rejected
-        public string Status { get; set; } = "Pending";
+        public JobStatus Status { get; set; } = JobStatus.Pending;
         public bool IsActive { get; set; } = true;
         public DateTime PostedAt { get; set; } = DateTime.Now;
 

@@ -14,10 +14,10 @@ namespace JobRecommendationAPI.Repositories.Implementation
         }
 
         //fecth the employer data using the id alsos include the connection to user
-        public async Task<Employer?> GetByIdAsync(int id) =>
+        public async Task<Employer?> GetByIdAsync(int employerId) =>
             await _db.Employers
             .Include(e => e.User)
-            .FirstOrDefaultAsync(e => e.EmployerId == id);
+            .FirstOrDefaultAsync(e => e.EmployerId == employerId);
 
         //fetch the employer profile from the user
         public async Task<Employer?> GetByUserIdAsync(int userId) =>
@@ -40,6 +40,38 @@ namespace JobRecommendationAPI.Repositories.Implementation
             await _db.SaveChangesAsync();
             return employer;
         }
-         
+
+        // JOB MANAGEMENT
+        public async Task<IEnumerable<Job>> GetJobsByEmployerAsync(int employerId)
+        {
+            return await _db.Jobs
+                .Where(j => j.EmployerId == employerId)
+                .OrderByDescending(j => j.JobId)
+                .ToListAsync();
+        }
+
+        public async Task<int> CountJobsAsync(int employerId)
+        {
+            return await _db.Jobs.CountAsync(j => j.EmployerId == employerId);
+        }
+
+        // APPLICATION INSIGHTS
+        public async Task<int> GetTotalApplicationsAsync(int employerId)
+        {
+            return await _db.Applications
+                .Where(a => a.Job.EmployerId == employerId)
+                .CountAsync();
+        }
+
+        public async Task<IEnumerable<Application>> GetApplicationsByEmployerAsync(int employerId)
+        {
+            return await _db.Applications
+                .Include(a => a.Job)
+                .Include(a => a.JobSeeker)
+                .ThenInclude(js => js.User)
+                .Where(a => a.Job.EmployerId == employerId)
+                .ToListAsync();
+        }
+
     }
 }

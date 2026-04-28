@@ -1,4 +1,5 @@
-﻿using JobRecommendationAPI.Models;
+﻿using JobRecommendationAPI.Enums;
+using JobRecommendationAPI.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace JobRecommendationAPI.Data
@@ -13,6 +14,7 @@ namespace JobRecommendationAPI.Data
         public DbSet<User> Users { get; set; }
         public DbSet<JobSeeker> JobSeekers { get; set; }
         public DbSet<Employer> Employers { get; set; }
+        public DbSet<Experience> Experiences { get; set; }
         public DbSet<Job> Jobs { get; set; }
         public DbSet<Application> Applications { get; set; }
 
@@ -36,6 +38,13 @@ namespace JobRecommendationAPI.Data
                 .HasForeignKey<Employer>(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // JobSeeker -> Experience (1 to many)
+            modelBuilder.Entity<JobSeeker>()
+                .HasMany(js => js.Experiences)
+                .WithOne(ex => ex.JobSeeker)
+                .HasForeignKey(ex => ex.JobSeekerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             //employer -> job (1 to many)
             modelBuilder.Entity<Employer>()
                 .HasMany(e => e.Jobs)
@@ -57,20 +66,28 @@ namespace JobRecommendationAPI.Data
                 .HasForeignKey(a => a.JobSeekerId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            modelBuilder.Entity<User>()
+    .Property(u => u.Role)
+    .HasConversion<string>();
+
+            modelBuilder.Entity<User>()
+                .Property(u => u.Status)
+                .HasConversion<string>();
+
             //ssed admin user ( password: admin123)
             //BCrypt is a password hashing algorithm — it converts a plain password into a secure, unreadable hash.
+            // Seed admin user (password: admin123)
             modelBuilder.Entity<User>().HasData(new User
             {
                 UserId = 1,
                 UserName = "admin",
                 Email = "admin@jobrec.com",
                 Password = "$2a$11$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.",
-                Role = "Admin",
-                Status = "Active",
-                CreatedAt = new DateTime(2026,1,1)
-
+                Role = Role.Admin,
+                Status = UserStatus.Active,
+                CreatedAt = new DateTime(2026, 1, 1)
             });
-                
+
         }
 
 

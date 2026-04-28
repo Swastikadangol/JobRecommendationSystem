@@ -12,59 +12,35 @@ namespace JobRecommendationAPI.Repositories.Implementation
         }
 
         //get a job using its id
-        public async Task<Job?> GetByIdAsync(int id) =>
+        public async Task<Job?> GetByIdAsync(int jobId) =>
             await _db.Jobs
             .Include(j => j.Employer)
-            .FirstOrDefaultAsync(j => j.JobId == id);
-
-        //fecth all approved job, oprionally filter by type("FullTime", "PartTime", "Internship")
-
-        public async Task<IEnumerable<Job>> GetAllApprovedAsync(string? type = null)
-        {
-            var query = _db.Jobs
-                .Include(j => j.Employer) //load employer details with job
-                .Where(j => j.Status == "Approved" && j.IsActive) //filter only approved and active jobs
-                .AsQueryable(); //convert to query so we can add conditions later
-
-            if(!string.IsNullOrEmpty(type) ) 
-                query = query.Where(j => j.JobType == type);
-
-            return await query
-                .OrderByDescending(j => j.PostedAt)
-                .ToListAsync();
-        }
-
-
-        //fetch the job posted by the specific employer find using employer id 
-        public async Task<IEnumerable<Job>> GetByEmployerAsync(int employerId) =>
-            await _db.Jobs
-            .Where(j => j.EmployerId == employerId && j.IsActive)
-            .OrderByDescending(j => j.PostedAt)
-            .ToListAsync();
-
+            .FirstOrDefaultAsync(j => j.JobId == jobId);
 
         //get all job posted with the employer details 
         //when approved ==nul show all the jobs
-        public async Task<IEnumerable<Job>> GetAllAsync(bool? approved = null)
+        public async Task<IEnumerable<Job>> GetAllAsync(JobStatus? status = null)
         {
             var query = _db.Jobs
                 .Include(j => j.Employer) // also load the linked Employer data
-                .ThenInclude(e => e!.User) //from that Employer, also load their linked User data → e! means "I know Employer might be null but trust me it's not"(null forgiveness operator)
                 .Where(j => j.IsActive)
                 .AsQueryable();
 
-            if (approved == true)
-                query = query.Where(j => j.Status == "Approved");
+            if (status.HasValue)
+                query = query.Where(j => j.Status == status.Value);
 
-            if (approved == false)
-                query = query.Where(j => j.Status == "Pending");
+           
 
             return await query.OrderByDescending(j => j.PostedAt).ToListAsync();
         }
 
+
         //create a new job and return the job
         public async Task<Job> CreateAsync(Job job)
         {
+            job.PostedAt = DateTime.UtcNow;
+            job.Status = JobStatus.Pending; // default visible job
+            job.IsActive = true;
             _db.Jobs.Add(job);
             await _db.SaveChangesAsync();
             return job;
@@ -81,41 +57,88 @@ namespace JobRecommendationAPI.Repositories.Implementation
         //delete the job from db using id
         public async Task<bool> DeleteAsync(int id)
         {
-           var job = await _db.Jobs.FindAsync(id);
+            var job = await _db.Jobs.FindAsync(id);
             if (job == null) return false;
+            job.Status = JobStatus.Closed;
             job.IsActive = false;
             await _db.SaveChangesAsync();
             return true;
         }
 
-        //set the job status to approved
-        //used by admin to approve the job posted by the employer
-        public async Task<bool> ApproveAsync(int id)
+
+        public async Task<IEnumerable<Job>> GetAllApprovedAsync(JobType? jobType = null, WorkMode? workMode = null)
         {
-            var job = await _db.Jobs.FindAsync(id);
-            if(job == null)  return false;
-            job.Status = "Approved";
-            await _db.SaveChangesAsync();
-            return true;
+            var query = _db.Jobs
+                .Include(j => j.Employer) // keep only this
+                .Where(j => j.Status == JobStatus.Approved && j.IsActive);
+
+            if (jobType.HasValue)
+                query = query.Where(j => j.JobType == jobType.Value);
+
+            if (workMode.HasValue)
+                query = query.Where(j => j.WorkMode == workMode.Value);
+
+            return await query
+                .OrderByDescending(j => j.PostedAt)
+                .ToListAsync();
         }
 
-        //set the job ststus to rejected
-        //used by admin to rejecy the job posted by the employer
-        public async Task<bool> RejectAsync(int id)
+        //fetch the job posted by the specific employer find using employer id 
+        public async Task<IEnumerable<Job>> GetByEmployerAsync(int employerId) =>
+            await _db.Jobs
+            .Where(j => j.EmployerId == employerId && j.IsActive)
+            .OrderByDescending(j => j.PostedAt)
+            .ToListAsync();
+
+        //search job
+        public async Task<IEnumerable<Job>> SearchAsync(string keyword)
         {
-            var job = await _db.Jobs.FindAsync(id);
-            if (job == null) return false;
-            job.Status = "Rejected";
-            await _db.SaveChangesAsync();
-            return true;
+            return await _db.Jobs
+                .Where(j =>
+                    j.IsActive &&
+                    (
+                        j.JobTitle.Contains(keyword) ||
+                        j.RequiredSkills.Contains(keyword) ||
+                        (j.JobDescription != null && j.JobDescription.Contains(keyword))
+                    ))
+                .OrderByDescending(j => j.PostedAt)
+                .ToListAsync();
         }
+
 
         //count all the active job
         public async Task<int> CountAsync() =>
             await _db.Jobs.CountAsync(j => j.IsActive);
 
-        //count the pending and active job 
-        public async Task<int> CountPendingAsync() =>
-            await _db.Jobs.CountAsync(j => j.Status == "Pending" && j.IsActive);
+
+        // Approve a job (set status to Approved)
+        public async Task<bool> ApproveAsync(int jobId)
+        {
+            var job = await _db.Jobs.FindAsync(jobId);
+            if (job == null) return false;
+
+            job.Status = JobStatus.Approved;
+            await _db.SaveChangesAsync();
+            return true;
+        }
+
+        // Reject a job (set status to Rejected)
+        public async Task<bool> RejectAsync(int jobId)
+        {
+            var job = await _db.Jobs.FindAsync(jobId);
+            if (job == null) return false;
+
+            job.Status = JobStatus.Rejected;
+            await _db.SaveChangesAsync();
+            return true;
+        }
+
+        // Count only pending jobs (for admin dashboard)
+        public async Task<int> CountPendingAsync()
+        {
+            return await _db.Jobs.CountAsync(j => j.Status == JobStatus.Pending && j.IsActive);
+        }
+
+
     }
 }

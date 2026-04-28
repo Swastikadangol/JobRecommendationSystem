@@ -21,7 +21,7 @@
         Task<Application> CreateAsync(Application application);
 
         //update application status ("Applied", "Reviewed", "Accepted", "Rejected") , done by employer
-        Task<bool> UpdateStatusAsync(int applicationId, string status);
+        Task<bool> UpdateStatusAsync(int applicationId, ApplicationStatus status);
 
         //count total number of application in db
         Task<int> CountAsync();

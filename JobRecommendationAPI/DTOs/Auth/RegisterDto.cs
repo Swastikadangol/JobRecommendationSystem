@@ -1,4 +1,6 @@
-﻿namespace JobRecommendationAPI.DTOs.Auth
+﻿using JobRecommendationAPI.Enums;
+
+namespace JobRecommendationAPI.DTOs.Auth
 {
     public class RegisterDto
     {
@@ -7,20 +9,16 @@
         public string Username {  get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
-        public string Role { get; set; } = "JobSeeker";
+        // JobSeeker or Employer only — Admin cannot register
+        public Role Role { get; set; } = Role.JobSeeker;
 
         //jobseeker fields
         public string? FullName {  get; set; }
         public string? Phone {  get; set; }
-        public string? Skills {  get; set; }
-        public string? Education {  get; set; }
-        public string? Experience {  get; set; }
-        public string? Interests {  get; set; }
+    
 
         //employer field
         public string? CompanyName {  get; set; }
-        public string? CompanyWebsite {  get; set; }
-        public string? CompanyDetails {  get; set; }
         public string? ContactNumber {  get; set; }
 
 
