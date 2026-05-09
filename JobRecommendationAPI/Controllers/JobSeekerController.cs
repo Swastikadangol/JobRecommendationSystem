@@ -12,7 +12,7 @@ namespace JobRecommendationAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-   
+    [Authorize(Roles = "JobSeeker")]
     public class JobSeekerController : ControllerBase
     {
         private readonly IJobSeekerRepository _jsRepo;
@@ -279,6 +279,32 @@ namespace JobRecommendationAPI.Controllers
                 message = "Applications cannot be withdrawn or deleted once submitted",
                 data = response
             });
+        }
+
+        [HttpGet("jobs")]
+        public async Task<IActionResult> GetApprovedJobs(
+    [FromQuery] JobType? jobType = null,
+    [FromQuery] WorkMode? workMode = null)
+        {
+            var jobs = await _jobRepo.GetAllApprovedAsync(jobType, workMode);
+
+            var response = jobs.Select(j => new
+            {
+                j.JobId,
+                j.JobTitle,
+                j.JobDescription,
+                j.JobType,
+                j.WorkMode,
+                j.Location,
+                j.SalaryRange,
+                j.RequiredSkills,
+                j.Deadline,
+                j.MinimumEducationLevel,
+                j.MinYearsExperience,
+                CompanyName = j.Employer != null ? j.Employer.CompanyName : ""
+            });
+
+            return Ok(response);
         }
 
     }

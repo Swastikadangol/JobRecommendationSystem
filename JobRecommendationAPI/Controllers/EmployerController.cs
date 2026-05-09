@@ -13,7 +13,7 @@ namespace JobRecommendationAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-   
+    [Authorize(Roles = "Employer")]
     public class EmployerController : ControllerBase
     {
         private readonly IEmployerRepository _empRepo;

@@ -2,6 +2,7 @@
 using JobRecommendationAPI.Enums;
 using JobRecommendationAPI.Models;
 using JobRecommendationAPI.Repositories.Interfaces;
+using JobRecommendationAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobRecommendationAPI.Controllers
@@ -13,15 +14,18 @@ namespace JobRecommendationAPI.Controllers
         private readonly IUserRepository _userRepo;
         private readonly IJobSeekerRepository _jobSeekerRepo;
         private readonly IEmployerRepository _employerRepo;
+        private readonly TokenService _tokenService;
 
         public AuthController(
-            IUserRepository userRepo,
-            IJobSeekerRepository jobSeekerRepo,
-            IEmployerRepository employerRepo)
+          IUserRepository userRepo,
+          IJobSeekerRepository jobSeekerRepo,
+          IEmployerRepository employerRepo,
+          TokenService tokenService)        
         {
             _userRepo = userRepo;
             _jobSeekerRepo = jobSeekerRepo;
             _employerRepo = employerRepo;
+            _tokenService = tokenService;      
         }
 
         // =========================
@@ -133,6 +137,8 @@ namespace JobRecommendationAPI.Controllers
                 companyName = emp?.CompanyName;
             }
 
+            // generate token with user info packed inside
+            var token = _tokenService.GenerateToken(user, profileId);
             return Ok(new
             {
                 message = "Login successful",
@@ -142,7 +148,8 @@ namespace JobRecommendationAPI.Controllers
                 user.Email,
                 user.Role,
                 fullName,
-                companyName
+                companyName,
+                token
             });
         }
     }

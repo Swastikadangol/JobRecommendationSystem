@@ -8,8 +8,7 @@ namespace JobRecommendationAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-
-
+    [Authorize(Roles = "Admin")]
     public class AdminController : ControllerBase
     {
         private readonly IUserRepository _userRepo;

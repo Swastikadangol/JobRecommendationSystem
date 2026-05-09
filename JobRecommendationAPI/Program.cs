@@ -2,7 +2,10 @@ using JobRecommendationAPI.Data;
 using JobRecommendationAPI.Repositories.Implementation;
 using JobRecommendationAPI.Repositories.Interfaces;
 using JobRecommendationAPI.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;               
+using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +23,7 @@ builder.Services.AddScoped<IApplicationRepository, ApplicationRepository>();
 
 // Services
 builder.Services.AddScoped<RecommendationService>();
+builder.Services.AddScoped<TokenService>(); 
 
 // Controllers with enum to string conversion
 builder.Services.AddControllers()
@@ -43,6 +47,25 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod());
 });
 
+// JWT Authentication 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,   // checks expiry
+            ValidateIssuerSigningKey = true,   // checks signature
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                                           Encoding.UTF8.GetBytes(
+                                               builder.Configuration["Jwt:Key"]!))
+        };
+    });
+
+builder.Services.AddAuthorization();
 var app = builder.Build();
 
 // Swagger UI
@@ -53,6 +76,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+app.UseAuthentication();    
+app.UseAuthorization();
 app.UseHttpsRedirection();
 app.MapControllers();
 app.Run();

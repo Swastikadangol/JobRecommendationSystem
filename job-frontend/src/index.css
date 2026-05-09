@@ -1,0 +1,23 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+
+:root {
+  --sidebar-bg:     #0f1117;
+  --gold:           #c9a96e;
+  --gold-light:     #e8c98a;
+  --page-bg:        #f7f4ef;
+  --card-bg:        #ffffff;
+  --card-border:    #e8e3da;
+  --text-primary:   #1a1814;
+  --text-secondary: #6b6459;
+  --text-muted:     #a09890;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--page-bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
