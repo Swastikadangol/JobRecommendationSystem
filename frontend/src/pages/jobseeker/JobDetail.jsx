@@ -1,294 +1,322 @@
-// Import React hooks
 import { useEffect, useState } from 'react'
-
-// Router hooks for URL params and navigation
 import { useParams, useNavigate } from 'react-router-dom'
-
-// Auth context (logged-in user info)
 import { useAuth } from '../../context/AuthContext'
-
-// Toast notifications
 import { useToast } from '../../context/ToastContext'
-
-// API calls
 import { jobSeekerApi } from '../../api'
-
-// Helper utilities
 import {
-  parseSkills,        // Convert skills string → array
-  jobTypeLabel,       // Convert job type code → label
-  workModeLabel,      // Convert work mode code → label
-  educationLabel,     // Convert education level code → label
-  formatDate,         // Format date for display
-  daysUntil,          // Days remaining until deadline
-  isJobExpired           // Check if job deadline passed
+  parseSkills, jobTypeLabel, workModeLabel, educationLabel,
+  formatDate, daysUntil,
+  isJobExpired
 } from '../../utils/helpers'
-
-// Icons
 import {
   ArrowLeft, MapPin, Clock, Briefcase, GraduationCap, Calendar,
-  DollarSign, Building2, CheckCircle, Send, AlertTriangle, Ban
+  DollarSign, Building2, CheckCircle, Send, AlertTriangle, Ban,
+  Timer, Wifi, Monitor, Blend, Users, TrendingUp
 } from 'lucide-react'
 
+/* ── Badge helpers with icons ────────────────────────────────── */
+const workModeMeta = {
+  0: { label: 'On-site', cls: 'badge-gray',   icon: Monitor },
+  1: { label: 'Remote',  cls: 'badge-green',  icon: Wifi },
+  2: { label: 'Hybrid',  cls: 'badge-blue',   icon: Blend },
+  OnSite: { label: 'On-site', cls: 'badge-gray',  icon: Monitor },
+  Remote: { label: 'Remote',  cls: 'badge-green', icon: Wifi },
+  Hybrid: { label: 'Hybrid',  cls: 'badge-blue',  icon: Blend },
+}
+const jobTypeMeta = {
+  0: { label: 'Full-time',   cls: 'badge-purple', icon: Timer },
+  1: { label: 'Part-time',   cls: 'badge-yellow', icon: Clock },
+  2: { label: 'Internship',  cls: 'badge-blue',   icon: Briefcase },
+  FullTime:   { label: 'Full-time',  cls: 'badge-purple', icon: Timer },
+  PartTime:   { label: 'Part-time',  cls: 'badge-yellow', icon: Clock },
+  Internship: { label: 'Internship', cls: 'badge-blue',   icon: Briefcase },
+}
+
+function TypeBadge({ val }) {
+  const m = jobTypeMeta[val] ?? { label: val, cls: 'badge-gray', icon: Briefcase }
+  return <span className={m.cls}><m.icon className="w-3 h-3" /> {m.label}</span>
+}
+function ModeBadge({ val }) {
+  const m = workModeMeta[val] ?? { label: val, cls: 'badge-gray', icon: Monitor }
+  return <span className={m.cls}><m.icon className="w-3 h-3" /> {m.label}</span>
+}
+
 export default function JobDetail() {
-
-  // Get job ID from URL (/job/:id)
   const { id } = useParams()
-
-  // Logged-in user info
   const { user } = useAuth()
-
-  // Toast notifications
   const { addToast } = useToast()
-
-  // Navigation helper
   const navigate = useNavigate()
 
-  // Job state
   const [job, setJob] = useState(null)
-
-  // Loading state for job fetch
   const [loading, setLoading] = useState(true)
-
-  // Apply button loading state
   const [applying, setApplying] = useState(false)
-
-  // Whether user already applied
   const [applied, setApplied] = useState(false)
 
-  // ------------------------------
-  // Fetch job + application status
-  // ------------------------------
   useEffect(() => {
-
-    // Fetch all approved jobs
     jobSeekerApi.getApprovedJobs()
       .then(r => {
-
-        // Find current job by ID
-        const found = (r.data || [])
-          .find(j => j.jobId === parseInt(id))
-
+        const found = (r.data || []).find(j => j.jobId === parseInt(id))
         setJob(found || null)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
 
-    // Check if user already applied
     if (user?.profileId) {
-
       jobSeekerApi.getApplications(user.profileId)
         .then(r => {
-
           const apps = r.data?.data || []
-
-          // If any application matches this job
-          setApplied(
-            apps.some(a => a.jobId === parseInt(id))
-          )
+          setApplied(apps.some(a => a.jobId === parseInt(id)))
         })
         .catch(() => {})
     }
-
   }, [id, user?.profileId])
 
-  // ------------------------------
-  // Apply for job
-  // ------------------------------
   const handleApply = async () => {
-
-    // Must be logged in
-    if (!user?.profileId) {
-      addToast('Please login to apply', 'error')
-      return
-    }
-
-    // Prevent applying to expired job
-    if (expired) {
-      addToast(
-        'This job has expired and is no longer accepting applications',
-        'error'
-      )
-      return
-    }
-
+    if (!user?.profileId) { addToast('Please login to apply', 'error'); return }
+    if (isJobExpired(job?.deadline)) { addToast('This job has expired', 'error'); return }
     setApplying(true)
-
     try {
-
-      // Apply API call
-      const res = await jobSeekerApi.apply({
-        jobSeekerId: user.profileId,
-        jobId: parseInt(id)
-      })
-
+      const res = await jobSeekerApi.apply({ jobSeekerId: user.profileId, jobId: parseInt(id) })
       setApplied(true)
-
-      // Show match score
-      addToast(
-        `Applied! Your match score: ${Math.round(res.data.matchScore)}%`,
-        'success'
-      )
-
+      addToast(`Applied! Match score: ${Math.round(res.data.matchScore)}%`, 'success')
     } catch (err) {
-
-      addToast(
-        err.response?.data?.message || 'Could not apply',
-        'error'
-      )
-
+      addToast(err.response?.data?.message || 'Could not apply', 'error')
     } finally {
       setApplying(false)
     }
   }
 
-  // ------------------------------
-  // Loading UI
-  // ------------------------------
   if (loading) {
     return (
-      <div className="animate-fadeIn space-y-4 max-w-3xl mx-auto">
+      <div className="animate-fadeIn space-y-4 max-w-4xl mx-auto">
         <div className="skeleton h-5 w-24 rounded" />
         <div className="card space-y-4">
-          <div className="skeleton h-12 w-12 rounded-xl" />
-          <div className="skeleton h-8 w-2/3 rounded" />
-          <div className="skeleton h-4 w-1/3 rounded" />
+          <div className="flex gap-4">
+            <div className="skeleton w-16 h-16 rounded-2xl" />
+            <div className="flex-1 space-y-2">
+              <div className="skeleton h-7 rounded w-1/2" />
+              <div className="skeleton h-4 rounded w-1/3" />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            {Array(3).fill(0).map((_, i) => <div key={i} className="skeleton h-7 rounded-full w-24" />)}
+          </div>
         </div>
       </div>
     )
   }
 
-  // ------------------------------
-  // Job not found UI
-  // ------------------------------
   if (!job) {
     return (
       <div className="text-center py-20">
-        <p className="text-ink-muted mb-4">Job not found.</p>
-        <button onClick={() => navigate(-1)} className="btn-secondary">
-          Go back
-        </button>
+        <p style={{ color: 'var(--ink-muted)' }} className="mb-4">Job not found.</p>
+        <button onClick={() => navigate(-1)} className="btn-secondary">Go back</button>
       </div>
     )
   }
 
-  // ------------------------------
-  // Derived values
-  // ------------------------------
-  const skills = parseSkills(job.requiredSkills)
-
+  const skills  = parseSkills(job.requiredSkills)
   const deadline = daysUntil(job.deadline)
+  const expired  = isJobExpired(job.deadline)
+  const urgentSoon = !expired && deadline !== null && deadline <= 5
 
-  const expired = isJobExpired(job.deadline)
-
-  const urgentSoon =
-    !expired && deadline !== null && deadline <= 5
-
-  // ------------------------------
-  // MAIN UI
-  // ------------------------------
   return (
-    <div className="animate-fadeIn max-w-3xl mx-auto space-y-5">
-
-      {/* Back button */}
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to jobs
+    <div className="animate-fadeIn max-w-4xl mx-auto space-y-5">
+      {/* Back */}
+      <button onClick={() => navigate(-1)}
+        className="flex items-center gap-1.5 text-sm transition-colors"
+        style={{ color: 'var(--ink-muted)' }}
+        onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'}
+        onMouseLeave={e => e.currentTarget.style.color = 'var(--ink-muted)'}>
+        <ArrowLeft className="w-4 h-4" /> Back to jobs
       </button>
 
-      {/* ================= HERO CARD ================= */}
+      {/* Expired banner */}
+      {expired && (
+        <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+          <Ban className="w-4 h-4 text-red-500 flex-shrink-0" />
+          <p className="text-sm text-red-600 dark:text-red-400 font-medium">This job has expired and is no longer accepting applications.</p>
+        </div>
+      )}
+
+      {/* Hero card */}
       <div className="card">
-
-        {/* Expired banner */}
-        {expired && (
-          <div className="flex items-center gap-2.5 px-4 py-3 mb-4 rounded-xl bg-red-50 border border-red-100">
-            <Ban className="w-4 h-4 text-red-500" />
-            <p className="text-sm text-red-600 font-medium">
-              This job has expired and is no longer accepting applications.
-            </p>
+        <div className="flex items-start gap-5 mb-5">
+          {/* Company logo */}
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)' }}>
+            <Building2 className="w-7 h-7" style={{ color: 'var(--ink-muted)' }} />
           </div>
-        )}
-
-        {/* Job header */}
-        <div className="flex items-start justify-between gap-4 mb-4">
-
-          {/* Title + company */}
-          <div className="flex items-start gap-4">
-
-            <div className="w-14 h-14 rounded-2xl bg-brand-50 border flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-brand-500" />
-            </div>
-
-            <div>
-              <h1 className="font-display text-2xl font-semibold text-ink">
-                {job.jobTitle}
-              </h1>
-              <p className="text-ink-muted">
-                {job.companyName || 'Company'}
-              </p>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div>
+                <h1 className="font-display text-2xl font-bold leading-tight" style={{ color: 'var(--ink)' }}>
+                  {job.jobTitle}
+                </h1>
+                <p className="text-base mt-1 font-medium" style={{ color: 'var(--ink-muted)' }}>
+                  {job.companyName || 'Company'}
+                </p>
+              </div>
+              {urgentSoon && !expired && (
+                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-300 font-medium flex-shrink-0">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  {deadline === 0 ? 'Closes today' : `${deadline}d left`}
+                </span>
+              )}
             </div>
           </div>
-
-          {/* Urgency badge */}
-          {urgentSoon && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border text-xs text-amber-700">
-              <AlertTriangle className="w-3.5 h-3.5" />
-              {deadline === 0 ? 'Closes today' : `${deadline}d left`}
-            </span>
-          )}
         </div>
 
-        {/* Badges */}
-        <div className="flex flex-wrap gap-2 mb-5">
-
-          <span className="badge badge-purple">
-            {jobTypeLabel(job.jobType)}
-          </span>
-
-          <span className="badge badge-green">
-            {workModeLabel(job.workMode)}
-          </span>
-
+        {/* Meta row — badges like reference screenshot */}
+        <div className="flex flex-wrap items-center gap-2 pb-5 mb-5" style={{ borderBottom: '1px solid var(--border)' }}>
+          <TypeBadge val={job.jobType} />
+          <ModeBadge val={job.workMode} />
           {job.location && (
-            <span className="text-xs text-ink-muted flex items-center gap-1">
-              <MapPin className="w-3 h-3" />
-              {job.location}
+            <span className="badge badge-gray">
+              <MapPin className="w-3 h-3" /> {job.location}
+            </span>
+          )}
+          {job.minYearsExperience != null && (
+            <span className="badge badge-gray">
+              <TrendingUp className="w-3 h-3" /> {job.minYearsExperience}+ yrs exp
+            </span>
+          )}
+          {job.salaryRange && (
+            <span className="badge badge-gray">
+              <DollarSign className="w-3 h-3" /> {job.salaryRange}
+            </span>
+          )}
+          {job.deadline && (
+            <span className={`badge ${expired ? 'badge-red' : 'badge-gray'}`}>
+              <Calendar className="w-3 h-3" />
+              {expired ? 'Expired' : `Apply before: ${formatDate(job.deadline)}`}
             </span>
           )}
         </div>
 
         {/* Apply button */}
-        <button
-          onClick={handleApply}
-          disabled={applied || applying || expired}
-          className="btn-primary"
-        >
-          {applying
-            ? 'Applying...'
-            : applied
-              ? 'Applied'
-              : expired
-                ? 'Expired'
-                : 'Apply now'}
-        </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={handleApply}
+            disabled={applied || applying || expired}
+            className={`btn-primary py-2.5 px-7 text-base font-semibold ${
+              applied ? '!bg-emerald-600 hover:!bg-emerald-600' :
+              expired ? '!bg-slate-200 !text-slate-400 !cursor-not-allowed dark:!bg-slate-700 dark:!text-slate-500' : ''
+            }`}
+          >
+            {applying ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70" />
+                </svg>
+                Applying…
+              </span>
+            ) : applied ? (
+              <><CheckCircle className="w-4 h-4" /> Applied</>
+            ) : expired ? (
+              <><Ban className="w-4 h-4" /> Expired</>
+            ) : (
+              <><Send className="w-4 h-4" /> Apply now</>
+            )}
+          </button>
+          {applied && (
+            <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
+              ✓ Your application has been submitted
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* Skills section */}
-      {skills.length > 0 && (
-        <div className="card">
-          <h2 className="font-semibold mb-3">Required Skills</h2>
-          <div className="flex flex-wrap gap-2">
-            {skills.map(s => (
-              <span key={s} className="px-3 py-1 bg-brand-50 rounded-xl text-sm">
-                {s}
-              </span>
-            ))}
-          </div>
+      {/* Body — 2 col layout */}
+      <div className="grid md:grid-cols-3 gap-5">
+        {/* Left: description + skills */}
+        <div className="md:col-span-2 space-y-5">
+          {job.jobDescription && (
+            <div className="card">
+              <h2 className="font-display font-semibold mb-4" style={{ color: 'var(--ink)', fontSize: '1.05rem' }}>
+                Job Description
+              </h2>
+              <div className="space-y-2">
+                {job.jobDescription.split('\n').filter(Boolean).map((line, i) => (
+                  <div key={i} className="flex items-start gap-2.5">
+                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0" />
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-muted)' }}>{line}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Required Skills */}
+          {skills.length > 0 && (
+            <div className="card">
+              <h2 className="font-display font-semibold mb-4" style={{ color: 'var(--ink)', fontSize: '1.05rem' }}>
+                Skills
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {skills.map(s => (
+                  <span key={s}
+                    className="px-3 py-1.5 rounded-xl text-sm font-medium border"
+                    style={{
+                      background: 'var(--bg-hover)',
+                      borderColor: 'var(--border)',
+                      color: 'var(--ink)',
+                    }}>
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Right: job details sidebar */}
+        <div className="space-y-5">
+          {/* Job Details */}
+          <div className="card">
+            <h2 className="font-display font-semibold mb-4" style={{ color: 'var(--ink)', fontSize: '1.05rem' }}>
+              Job Details
+            </h2>
+            <div className="space-y-0 divide-y" style={{ borderColor: 'var(--border)' }}>
+              {[
+                { icon: Timer,        label: 'Job Type',   value: jobTypeLabel(job.jobType) },
+                { icon: Wifi,         label: 'Work Mode',  value: workModeLabel(job.workMode) },
+                ...(job.location ? [{ icon: MapPin, label: 'Location', value: job.location }] : []),
+                ...(job.minYearsExperience != null ? [{ icon: TrendingUp, label: 'Experience', value: `${job.minYearsExperience}+ years` }] : []),
+                ...(job.minimumEducationLevel != null ? [{ icon: GraduationCap, label: 'Education', value: educationLabel(job.minimumEducationLevel) }] : []),
+                ...(job.salaryRange ? [{ icon: DollarSign, label: 'Salary', value: job.salaryRange }] : []),
+              ].map(({ icon: Icon, label, value }) => (
+                <div key={label} className="flex items-center justify-between py-3 gap-3">
+                  <div className="flex items-center gap-2" style={{ color: 'var(--ink-muted)' }}>
+                    <Icon className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-sm">{label}</span>
+                  </div>
+                  <span className="text-sm font-medium text-right" style={{ color: 'var(--ink)' }}>{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Company */}
+          {job.companyName && (
+            <div className="card">
+              <h2 className="font-display font-semibold mb-3" style={{ color: 'var(--ink)', fontSize: '1.05rem' }}>
+                Company
+              </h2>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)' }}>
+                  <Building2 className="w-4 h-4" style={{ color: 'var(--ink-muted)' }} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>{job.companyName}</p>
+                  {job.location && <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>{job.location}</p>}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

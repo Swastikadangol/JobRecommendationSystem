@@ -41,13 +41,16 @@ namespace JobRecommendationAPI.Controllers
             if (profile == null)
                 return NotFound(new { message = "Profile not found" });
 
-            return Ok(new
-            {
-                profile.JobSeekerId,
-                profile.FullName,
-                profile.Skills,
-                profile.EducationLevel
-            });
+           return Ok(new
+{
+    profile.JobSeekerId,
+    profile.FullName,
+    profile.Phone,
+    profile.Skills,
+    profile.EducationLevel,
+    profile.PreferredJobType,
+    profile.PreferredWorkMode
+});
         }
 
         [HttpPut("profile/{id}")]

@@ -2,30 +2,33 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { jobSeekerApi } from '../../api'
-import {
-  initials, avatarColor, educationLabel, jobTypeLabel,
-  workModeLabel, parseSkills
-} from '../../utils/helpers'
-import {
-  Phone, BookOpen, Briefcase, MapPin, Plus, Pencil, Trash2,
-  Save, X, Calendar, Mail, Settings, ChevronRight
-} from 'lucide-react'
+import { avatarColor, educationLabel, initials, jobTypeLabel, parseSkills, workModeLabel } from '../../utils/helpers'
+import { Mail, Pencil, Phone, BookOpen, Briefcase, MapPin, Plus, Calendar, Trash2, Settings, X, Save } from 'lucide-react'
 
 const EDUCATION_OPTS = [
-  { value: '0', label: 'High School' }, { value: '1', label: 'Diploma' },
-  { value: '2', label: 'Bachelor' }, { value: '3', label: 'Master' }, { value: '4', label: 'PhD' },
+  { value: '0', label: 'High School' },
+  { value: '1', label: 'Diploma' },
+  { value: '2', label: 'Bachelor' },
+  { value: '3', label: 'Master' },
+  { value: '4', label: 'PhD' },
 ]
 const JOB_TYPE_OPTS = [
-  { value: '', label: 'Any type' }, { value: '0', label: 'Full-time' },
-  { value: '1', label: 'Part-time' }, { value: '2', label: 'Internship' },
+  { value: '', label: 'Any type' },
+  { value: '0', label: 'Full-time' },
+  { value: '1', label: 'Part-time' },
+  { value: '2', label: 'Internship' },
 ]
 const WORK_MODE_OPTS = [
-  { value: '', label: 'Any mode' }, { value: '0', label: 'On-site' },
-  { value: '1', label: 'Remote' }, { value: '2', label: 'Hybrid' },
+  { value: '', label: 'Any mode' },
+  { value: '0', label: 'On-site' },
+  { value: '1', label: 'Remote' },
+  { value: '2', label: 'Hybrid' },
 ]
 
 // ── Experience Modal ──────────────────────────────────────────────────────────
 function ExperienceModal({ exp, onSave, onClose }) {
+  const { user, updateUser } = useAuth()
+  const { addToast } = useToast()
   const [form, setForm] = useState({
     jobTitle: exp?.jobTitle || '',
     companyName: exp?.companyName || '',
@@ -110,36 +113,42 @@ function ExperienceModal({ exp, onSave, onClose }) {
 
 // ── Edit Profile Modal ────────────────────────────────────────────────────────
 function EditProfileModal({ profile, onSave, onClose, saving }) {
-  // Initialize form FROM the profile passed in — so values always show
-  const [form, setForm] = useState({
-    fullName: profile?.fullName || '',
-    phone: profile?.phone || '',
-    skills: profile?.skills || '',
-    educationLevel: profile?.educationLevel !== null && profile?.educationLevel !== undefined
-      ? String(profile.educationLevel) : '',
-    preferredJobType: profile?.preferredJobType !== null && profile?.preferredJobType !== undefined
-      ? String(profile.preferredJobType) : '',
-    preferredWorkMode: profile?.preferredWorkMode !== null && profile?.preferredWorkMode !== undefined
-      ? String(profile.preferredWorkMode) : '',
+  // Re-initialize form EVERY TIME modal opens (profile prop changes)
+  const buildForm = (p) => ({
+    fullName: p?.fullName ?? '',
+    phone: p?.phone ?? '',
+    skills: p?.skills ?? '',
+    educationLevel: p?.educationLevel != null ? String(p.educationLevel) : '',
+    preferredJobType: p?.preferredJobType != null ? String(p.preferredJobType) : '',
+    preferredWorkMode: p?.preferredWorkMode != null ? String(p.preferredWorkMode) : '',
   })
+
+  const [form, setForm] = useState(() => buildForm(profile))
+
+  // Sync whenever profile prop updates (after a save the parent updates profile state)
+  useEffect(() => {
+    setForm(buildForm(profile))
+  }, [profile])
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-modal w-full max-w-lg animate-fadeIn">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-surface-100">
+      <div className="rounded-2xl w-full max-w-lg animate-fadeIn"
+        style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-modal)' }}>
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
           <div className="flex items-center gap-2">
-            <Settings className="w-4 h-4 text-ink-muted" />
-            <h3 className="font-display font-semibold text-ink">Edit Profile</h3>
+            <Settings className="w-4 h-4" style={{ color: 'var(--ink-muted)' }} />
+            <h3 className="font-display font-semibold" style={{ color: 'var(--ink)' }}>Edit Profile</h3>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-100 text-ink-muted transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--ink-muted)' }}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
-          {/* Basic info */}
           <div>
-            <p className="text-xs font-semibold text-ink-light uppercase tracking-wide mb-3">Basic Info</p>
+            <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: 'var(--ink-light)' }}>Basic Info</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="label">Full Name</label>
@@ -149,7 +158,7 @@ function EditProfileModal({ profile, onSave, onClose, saving }) {
               </div>
               <div>
                 <label className="label">Phone</label>
-                <input type="tel" className="input" placeholder="+1 234 567 8900"
+                <input type="tel" className="input" placeholder="+977 98XXXXXXXX"
                   value={form.phone}
                   onChange={e => setForm({ ...form, phone: e.target.value })} />
               </div>
@@ -173,7 +182,7 @@ function EditProfileModal({ profile, onSave, onClose, saving }) {
               <div>
                 <label className="label">Education</label>
                 <select className="input" value={form.educationLevel}
-                  onChange={e => setForm({ ...form, educationLevel: e.target.value })}>
+                  onChange={e => setForm({ ...form, educationLevel: String(e.target.value)  })}>
                   <option value="">Select</option>
                   {EDUCATION_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
@@ -181,14 +190,14 @@ function EditProfileModal({ profile, onSave, onClose, saving }) {
               <div>
                 <label className="label">Job Type</label>
                 <select className="input" value={form.preferredJobType}
-                  onChange={e => setForm({ ...form, preferredJobType: e.target.value })}>
+                  onChange={e => setForm({ ...form, preferredJobType: String(e.target.value) })}>
                   {JOB_TYPE_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
               <div>
                 <label className="label">Work Mode</label>
                 <select className="input" value={form.preferredWorkMode}
-                  onChange={e => setForm({ ...form, preferredWorkMode: e.target.value })}>
+                  onChange={e => setForm({ ...form, preferredWorkMode: String(e.target.value)  })}>
                   {WORK_MODE_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
@@ -241,7 +250,7 @@ export default function Profile() {
         setProfile(pRes.data)
         setExperiences(eRes.data || [])
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false))
   }, [profileId])
 
@@ -252,9 +261,9 @@ export default function Profile() {
         fullName: form.fullName,
         phone: form.phone,
         skills: form.skills,
-        educationLevel: form.educationLevel !== '' ? parseInt(form.educationLevel) : null,
-        preferredJobType: form.preferredJobType !== '' ? parseInt(form.preferredJobType) : null,
-        preferredWorkMode: form.preferredWorkMode !== '' ? parseInt(form.preferredWorkMode) : null,
+        educationLevel: form.educationLevel === '' ? null : Number(form.educationLevel),
+        preferredJobType: form.preferredJobType === '' ? null : Number(form.preferredJobType),
+        preferredWorkMode: form.preferredWorkMode === '' ? null : Number(form.preferredWorkMode),
       }
       await jobSeekerApi.updateProfile(profileId, payload)
       // Update local profile state with saved values

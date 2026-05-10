@@ -2,9 +2,18 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useToast } from '../../context/ToastContext'
 import { authApi } from '../../api'
-import { Zap, Eye, EyeOff, ArrowRight, User, Building2 } from 'lucide-react'
+import {
+  Zap,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  User,
+  Building2,
+  Moon,
+  Sun
+} from 'lucide-react'
 
-// Role configuration (used to switch between Job Seeker and Employer registration)
+// Role configuration
 const ROLES = [
   {
     label: 'Job Seeker',
@@ -20,13 +29,12 @@ const ROLES = [
   },
 ]
 
-// Register page component (handles user signup)
 export default function Register() {
 
-  // selected role (0 = Job Seeker, 1 = Employer)
+  // selected role
   const [role, setRole] = useState('0')
 
-  // form state for all input fields
+  // form state
   const [form, setForm] = useState({
     username: '',
     email: '',
@@ -37,89 +45,96 @@ export default function Register() {
     contactNumber: '',
   })
 
-  // toggle password visibility
+  // password visibility
   const [showPw, setShowPw] = useState(false)
 
-  // loading state for API request
+  // loading state
   const [loading, setLoading] = useState(false)
 
-  // toast notification system
+  // theme state
+  const [darkMode, setDarkMode] = useState(
+    document.documentElement.classList.contains('dark')
+  )
+
+  const toggleTheme = () => {
+    document.documentElement.classList.toggle('dark')
+    setDarkMode(document.documentElement.classList.contains('dark'))
+  }
+
+  // toast
   const { addToast } = useToast()
 
-  // navigation hook after successful registration
+  // navigation
   const navigate = useNavigate()
 
-  // helper function to reduce repetitive input handling
+  // helper for inputs
   const f = (k) => ({
     value: form[k],
     onChange: e =>
       setForm({ ...form, [k]: e.target.value })
   })
 
-  // handle form submission
+  // form submit
   const handleSubmit = async (e) => {
-    e.preventDefault() // prevent page reload
-    setLoading(true) // enable loading state
+    e.preventDefault()
+    setLoading(true)
 
     try {
-      // send registration request to backend
+
       await authApi.register({
         ...form,
-        role: parseInt(role) // convert role string → number
+        role: parseInt(role)
       })
 
-      // success toast message
       addToast('Account created! Please sign in.', 'success')
 
-      // redirect to login page
       navigate('/login')
 
     } catch (err) {
 
-      // error toast message (API fallback)
       addToast(err.response?.data || 'Registration failed', 'error')
 
     } finally {
-      setLoading(false) // stop loading state
+
+      setLoading(false)
+
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-surface-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 transition-colors duration-200">
 
       <div className="w-full max-w-sm">
 
-        {/* ── Logo Section ── */}
+       
+
+        {/* Logo */}
         <div className="flex items-center gap-2.5 justify-center mb-8">
 
-          {/* app logo icon */}
-          <div className="w-9 h-9 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-200">
+          <div className="w-9 h-9 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-200/50">
             <Zap className="w-5 h-5 text-white fill-white" />
           </div>
 
-          {/* app name */}
-          <span className="font-display font-semibold text-xl text-ink">
+          <span className="font-display font-semibold text-xl text-slate-900 dark:text-white">
             TalentMatch
           </span>
         </div>
 
-        {/* ── Register Card ── */}
-        <div className="card shadow-modal">
+        {/* Card */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl dark:shadow-slate-900/60 p-6">
 
-          {/* heading */}
-          <h1 className="font-display font-semibold text-xl text-ink mb-1">
+          {/* Heading */}
+          <h1 className="font-display font-semibold text-xl text-slate-900 dark:text-white mb-1">
             Create account
           </h1>
 
-          {/* sub text */}
-          <p className="text-sm text-ink-muted mb-5">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-5">
             Join thousands finding great jobs
           </p>
 
-          {/* ── Role Selector Section ── */}
+          {/* Role Selector */}
           <div className="grid grid-cols-2 gap-2 mb-5">
 
-            {/* map roles into selectable cards */}
             {ROLES.map(r => (
               <button
                 key={r.value}
@@ -128,58 +143,65 @@ export default function Register() {
 
                 className={`p-3 rounded-xl border text-left transition-all duration-150 ${
                   role === r.value
-                    ? 'border-brand-400 bg-brand-50' // active role style
-                    : 'border-surface-200 hover:border-surface-300' // inactive style
+                    ? 'border-brand-400 bg-brand-50 dark:bg-brand-500/10'
+                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                 }`}
               >
 
-                {/* role icon */}
+                {/* Icon */}
                 <r.icon
                   className={`w-4 h-4 mb-1 ${
-                    role === r.value ? 'text-brand-600' : 'text-ink-light'
+                    role === r.value
+                      ? 'text-brand-600 dark:text-brand-400'
+                      : 'text-slate-400 dark:text-slate-500'
                   }`}
                 />
 
-                {/* role label */}
+                {/* Label */}
                 <div
                   className={`text-xs font-medium ${
-                    role === r.value ? 'text-brand-700' : 'text-ink'
+                    role === r.value
+                      ? 'text-brand-700 dark:text-brand-300'
+                      : 'text-slate-900 dark:text-white'
                   }`}
                 >
                   {r.label}
                 </div>
 
-                {/* role description */}
-                <div className="text-xs text-ink-light">
+                {/* Description */}
+                <div className="text-xs text-slate-400 dark:text-slate-500">
                   {r.desc}
                 </div>
+
               </button>
             ))}
           </div>
 
-          {/* ── Registration Form ── */}
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-3">
 
-            {/* username + name row */}
+            {/* Username + Name */}
             <div className="grid grid-cols-2 gap-3">
 
-              {/* username field */}
+              {/* Username */}
               <div>
                 <label className="label">Username</label>
+
                 <input
                   type="text"
                   placeholder="johndoe"
                   className="input"
                   required
-                  {...f('username')} // bind value + onChange
+                  {...f('username')}
                 />
               </div>
 
-              {/* full name / contact name */}
+              {/* Full Name */}
               <div>
                 <label className="label">
                   {role === '0' ? 'Full Name' : 'Contact Name'}
                 </label>
+
                 <input
                   type="text"
                   placeholder="John Doe"
@@ -189,9 +211,10 @@ export default function Register() {
               </div>
             </div>
 
-            {/* email field */}
+            {/* Email */}
             <div>
               <label className="label">Email</label>
+
               <input
                 type="email"
                 placeholder="you@example.com"
@@ -201,10 +224,11 @@ export default function Register() {
               />
             </div>
 
-            {/* phone field (only for Job Seeker) */}
+            {/* Phone for Job Seeker */}
             {role === '0' && (
               <div>
                 <label className="label">Phone (optional)</label>
+
                 <input
                   type="tel"
                   placeholder="+1 234 567 8900"
@@ -214,12 +238,13 @@ export default function Register() {
               </div>
             )}
 
-            {/* company fields (only for Employer) */}
+            {/* Employer Fields */}
             {role === '1' && (
               <>
-                {/* company name */}
+                {/* Company Name */}
                 <div>
                   <label className="label">Company Name</label>
+
                   <input
                     type="text"
                     placeholder="Acme Corp"
@@ -229,9 +254,10 @@ export default function Register() {
                   />
                 </div>
 
-                {/* company contact */}
+                {/* Company Phone */}
                 <div>
                   <label className="label">Company Phone</label>
+
                   <input
                     type="tel"
                     placeholder="+1 234 567 8900"
@@ -243,7 +269,7 @@ export default function Register() {
               </>
             )}
 
-            {/* password field */}
+            {/* Password */}
             <div>
               <label className="label">Password</label>
 
@@ -257,11 +283,11 @@ export default function Register() {
                   {...f('password')}
                 />
 
-                {/* toggle password visibility */}
+                {/* Toggle Password */}
                 <button
                   type="button"
                   onClick={() => setShowPw(!showPw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-light hover:text-ink"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                 >
                   {showPw
                     ? <EyeOff className="w-4 h-4" />
@@ -271,19 +297,21 @@ export default function Register() {
               </div>
             </div>
 
-            {/* submit button */}
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
               className="btn-primary w-full justify-center py-2.5 !mt-4"
             >
 
-              {/* loading state UI */}
               {loading ? (
                 <span className="flex items-center gap-2">
 
-                  {/* spinner */}
-                  <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                  <svg
+                    className="animate-spin w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
                     <circle
                       cx="12"
                       cy="12"
@@ -297,7 +325,6 @@ export default function Register() {
                   Creating account…
                 </span>
               ) : (
-                // default button state
                 <>
                   Create account <ArrowRight className="w-4 h-4" />
                 </>
@@ -306,13 +333,14 @@ export default function Register() {
 
           </form>
 
-          {/* login redirect link */}
-          <p className="text-center text-sm text-ink-muted mt-5">
+          {/* Login Link */}
+          <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-5">
+
             Already have an account?{' '}
 
             <Link
               to="/login"
-              className="text-brand-600 font-medium hover:text-brand-700"
+              className="text-brand-600 dark:text-brand-400 font-medium hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
             >
               Sign in
             </Link>
