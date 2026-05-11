@@ -7,7 +7,7 @@ import {
   Zap, Building2, Users, ShieldCheck, PlusSquare, UserCheck, AlertTriangle
 } from 'lucide-react'
 
-const NAV_BY_ROLE = {
+const NAV_BY_ROLE = { 
   JobSeeker: [
     { to: '/dashboard',       icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/browse',          icon: Briefcase,       label: 'Browse Jobs' },

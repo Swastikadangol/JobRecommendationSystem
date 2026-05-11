@@ -1,165 +1,82 @@
 import { useNavigate } from 'react-router-dom'
+import { TrendingUp, ArrowRight, Building2, Calendar, Ban } from 'lucide-react'
+import { statusBadge, timeAgo, isJobExpired } from '../../utils/helpers'
 
-import {
-  TrendingUp,
-  ArrowRight,
-  Building2,
-  Calendar,
-  Ban
-} from 'lucide-react'
-
-import {
-  statusBadge,
-  timeAgo,
-  isJobExpired
-} from '../../utils/helpers'
-
-/**
- * ─────────────────────────────────────────────
- * APPLICATION CARD COMPONENT
- * ─────────────────────────────────────────────
- * Displays a job application made by the user
- *
- * Features:
- * - Job title + company
- * - Application status badge
- * - Match score
- * - Expired job indicator
- * - Applied date
- * - Click navigation to job details page
- *
- * Props:
- * - app → application data object
- * - compact → smaller layout version
- */ 
-
-export default function ApplicationCard({app, compact = false}){
-    //react router naviagtion hook
-    const navigate = useNavigate()
-
-    /**
-   * Get badge label + class based on application status
-   * Example:
-   * Applied → blue badge
-   * Rejected → red badge
-   */
-  const {label, cls} = statusBadge(app.applicationStatus);
-
-  //check if the job deadline has passed
-  const expired = isJobExpired(app.deadline)
+// compact=true  → used in Dashboard recent apps (smaller, no date row at top)
+// compact=false → used in Applications page (full card)
+export default function ApplicationCard({ app, compact = false }) {
+  const navigate        = useNavigate()
+  const { label, cls }  = statusBadge(app.applicationStatus)
+  const expired         = isJobExpired(app.deadline)
 
   return (
-
-    /**
-     * Main card container
-     * Clicking card navigates to job details page
-     */
     <div
-      className="card hover:shadow-card-hover transition-all duration-200 cursor-pointer group"
+      className="card-hover animate-fadeIn"
       onClick={() => navigate(`/jobs/${app.jobId}`)}
     >
-
       <div className="flex items-start justify-between gap-3">
 
-        {/* ─────────────────────────────
-            LEFT SECTION
-            Job info + status
-        ───────────────────────────── */}
+        {/* Left: icon + info */}
         <div className="flex items-start gap-3 flex-1 min-w-0">
-
-          {/* Company / job icon */}
-          <div className="w-9 h-9 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <Building2 className="w-4 h-4 text-brand-400" />
-          </div>
+          {/* Company icon */}
+         <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5
+                bg-brand-50 dark:bg-brand-500/10
+                border border-brand-100 dark:border-brand-800/60">
+  <Building2 className="w-4 h-4 text-brand-500 dark:text-brand-400 flex-shrink-0" />
+</div>
 
           <div className="min-w-0">
-
-            {/* Job title + badges */}
+            {/* Title + status badge */}
             <div className="flex items-center gap-2 flex-wrap mb-0.5">
-
-              {/* Job title */}
-              <h3 className="font-display font-semibold text-ink text-sm leading-snug truncate">
+              <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">
                 {app.jobTitle}
               </h3>
-
-              {/* Application status badge */}
-              <span className={cls}>
-                {label}
-              </span>
-
-              {/* Expired job badge */}
+              <span className={cls}>{label}</span>
               {expired && (
-                <span className="badge badge-red flex items-center gap-1">
-                  <Ban className="w-3 h-3" />
-                  Expired
+                <span className="badge badge-red">
+                  <Ban className="w-3 h-3" /> Expired
                 </span>
               )}
             </div>
 
             {/* Company name */}
-            <p className="text-xs text-ink-muted">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               {app.companyName}
             </p>
 
-            {/* Applied date (hidden in compact mode) */}
+            {/* Date — shown in full card only */}
             {!compact && (
-              <div className="flex items-center gap-3 mt-1.5">
-
-                <span className="flex items-center gap-1 text-xs text-ink-light">
-                  <Calendar className="w-3 h-3" />
-
-                  {/* Relative applied time */}
-                  Applied {timeAgo(app.appliedAt)}
-                </span>
-
-              </div>
+              <span className="flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500 mt-1.5">
+                <Calendar className="w-3 h-3" />
+                Applied {timeAgo(app.appliedAt)}
+              </span>
             )}
           </div>
         </div>
 
-        {/* ─────────────────────────────
-            RIGHT SECTION
-            Match score + arrow
-        ───────────────────────────── */}
+        {/* Right: match score + arrow */}
         <div className="flex items-center gap-3 flex-shrink-0">
-
-          {/* Match score */}
           {app.matchScore !== undefined && (
-
             <div className="text-right hidden sm:block">
-
-              {/* Match percentage */}
-              <div className="font-display font-bold text-brand-600 text-base">
+              <div className="font-display font-bold text-brand-600 dark:text-brand-400 text-base leading-none">
                 {Math.round(app.matchScore)}%
               </div>
-
-              {/* Match label */}
-              <div className="text-xs text-ink-light flex items-center gap-1 justify-end">
-                <TrendingUp className="w-3 h-3" />
-                match
+              <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-0.5 justify-end mt-0.5">
+                <TrendingUp className="w-3 h-3" /> match
               </div>
-
             </div>
           )}
-
-          {/* Arrow icon */}
-          <ArrowRight className="w-4 h-4 text-ink-light group-hover:text-brand-500 transition-colors" />
+          <ArrowRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-brand-500 transition-colors" />
         </div>
+
       </div>
 
-      {/* ─────────────────────────────
-          COMPACT MODE FOOTER
-      ─────────────────────────────
-          Smaller applied date section
-          shown only in compact layout
-      */}
+      {/* Date row for compact mode */}
       {compact && (
-        <div className="mt-2 pt-2 border-t border-surface-100">
-
-          <span className="text-xs text-ink-light">
+        <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <span className="text-xs text-slate-400 dark:text-slate-500">
             Applied {timeAgo(app.appliedAt)}
           </span>
-
         </div>
       )}
     </div>

@@ -47,9 +47,13 @@ function JobSeekerCard({ job, showMatch }) {
     >
       {/* Header */}
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
-          <Building2 className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-        </div>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5
+                bg-brand-50 dark:bg-brand-500/10
+                border border-brand-100 dark:border-brand-800/60">
+  <Building2 className="w-4 h-4 text-brand-500 dark:text-brand-400 flex-shrink-0" />
+</div>
+
+        
         <div className="flex-1 min-w-0">
           <h3 className="font-display font-semibold text-base text-slate-900 dark:text-slate-100 leading-snug truncate">{job.jobTitle}</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 truncate mt-0.5">{job.companyName || 'Company'}</p>

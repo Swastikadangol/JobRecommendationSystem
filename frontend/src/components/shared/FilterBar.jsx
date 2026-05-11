@@ -1,28 +1,39 @@
 import { Search, X } from 'lucide-react'
 
+/* ─────────────────────────────────────────────
+   Filter options for different roles
+───────────────────────────────────────────── */
+
+// Job types
 const JOB_TYPES = [
-  { label: 'Full-time', value: '0' },
-  { label: 'Part-time', value: '1' },
-  { label: 'Internship', value: '2' },
+  { label: 'Full-time',   value: '0' },
+  { label: 'Part-time',   value: '1' },
+  { label: 'Internship',  value: '2' },
 ]
 
+// Work mode types
 const WORK_MODES = [
   { label: 'On-site', value: '0' },
-  { label: 'Remote', value: '1' },
-  { label: 'Hybrid', value: '2' },
+  { label: 'Remote',  value: '1' },
+  { label: 'Hybrid',  value: '2' },
 ]
 
+// Employer job statuses
 const EMPLOYER_STATUSES = [
-  { label: 'Active', value: 'true' },
+  { label: 'Active', value: 'true'  },
   { label: 'Closed', value: 'false' },
 ]
 
+// Admin approval statuses
 const ADMIN_STATUSES = [
-  { label: 'Pending', value: '0' },
+  { label: 'Pending',  value: '0' },
   { label: 'Approved', value: '1' },
   { label: 'Rejected', value: '2' },
 ]
 
+/* ─────────────────────────────────────────────
+   Reusable filter chip button
+───────────────────────────────────────────── */
 function Chip({ label, active, onClick }) {
   return (
     <button
@@ -30,7 +41,7 @@ function Chip({ label, active, onClick }) {
       className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ${
         active
           ? 'bg-brand-600 text-white border-brand-600'
-          : 'bg-white text-ink-muted border-surface-200 hover:border-brand-300 hover:text-brand-600'
+          : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-brand-400 dark:hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-400'
       }`}
     >
       {label}
@@ -38,44 +49,97 @@ function Chip({ label, active, onClick }) {
   )
 }
 
-export default function FilterBar({ role = 'JobSeeker', filters, onChange, onReset, totalCount, showCount = true, placeholder }) {
+/* ─────────────────────────────────────────────
+   Small vertical separator between groups
+───────────────────────────────────────────── */
+function Sep() {
+  return (
+    <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 flex-shrink-0" />
+  )
+}
+
+/* ─────────────────────────────────────────────
+   Main FilterBar Component
+───────────────────────────────────────────── */
+export default function FilterBar({
+  role = 'JobSeeker', // Default role
+  filters,            // Current filter state
+  onChange,           // Update filter state
+  onReset,            // Reset all filters
+  totalCount,         // Total result count
+  showCount = true,  // Toggle count visibility
+  placeholder,        // Custom search placeholder
+}) {
+
+  /* Toggle filter:
+     - If same value clicked again => remove filter
+     - Otherwise set new value
+  */
   const setFilter = (key, val) =>
-    onChange({ ...filters, [key]: val === filters[key] ? '' : val })
+    onChange({
+      ...filters,
+      [key]: val === filters[key] ? '' : val,
+    })
 
-  const hasActive = Object.values(filters).some(v => v !== '' && v !== null && v !== undefined)
+  // Check if any filter is active
+  const hasActive = Object.values(filters).some(
+    v => v !== '' && v !== null && v !== undefined
+  )
 
+  // Placeholder text based on role
   const searchPlaceholder = placeholder || {
     JobSeeker: 'Search by title, skill, or keyword…',
-    Employer: 'Search by job title…',
-    Admin: 'Search by title or company…',
+    Employer:  'Search by job title…',
+    Admin:     'Search by title or company…',
   }[role] || 'Search…'
 
   return (
     <div className="space-y-3">
-      {/* Search */}
+
+      {/* ─────────────────────────────────────
+          Search Input
+      ───────────────────────────────────── */}
       <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-light pointer-events-none" />
+
+        {/* Search icon */}
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
+
+        {/* Search field */}
         <input
           type="text"
           placeholder={searchPlaceholder}
           value={filters.search || ''}
-          onChange={e => onChange({ ...filters, search: e.target.value })}
+          onChange={e =>
+            onChange({
+              ...filters,
+              search: e.target.value,
+            })
+          }
           className="input pl-10"
         />
+
+        {/* Clear search button */}
         {filters.search && (
           <button
-            onClick={() => onChange({ ...filters, search: '' })}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-light hover:text-ink"
+            onClick={() =>
+              onChange({
+                ...filters,
+                search: '',
+              })
+            }
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
           >
             <X className="w-3.5 h-3.5" />
           </button>
         )}
       </div>
 
-      {/* Chip filters */}
+      {/* ─────────────────────────────────────
+          Filter Chips Section
+      ───────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-2">
 
-        {/* Job Type — all roles */}
+        {/* ── Job Types (visible for all roles) ── */}
         <div className="flex items-center gap-1">
           {JOB_TYPES.map(t => (
             <Chip
@@ -87,10 +151,15 @@ export default function FilterBar({ role = 'JobSeeker', filters, onChange, onRes
           ))}
         </div>
 
-        {/* JobSeeker: work mode + location */}
+        {/* ─────────────────────────────────────
+            JobSeeker Filters
+        ───────────────────────────────────── */}
         {role === 'JobSeeker' && (
           <>
-            <div className="w-px h-5 bg-surface-200" />
+            {/* Separator */}
+            <Sep />
+
+            {/* Work mode chips */}
             <div className="flex items-center gap-1">
               {WORK_MODES.map(m => (
                 <Chip
@@ -101,21 +170,44 @@ export default function FilterBar({ role = 'JobSeeker', filters, onChange, onRes
                 />
               ))}
             </div>
-            <div className="w-px h-5 bg-surface-200" />
+
+            {/* Separator */}
+            <Sep />
+
+            {/* Location input */}
             <input
               type="text"
               placeholder="Location…"
               value={filters.location || ''}
-              onChange={e => onChange({ ...filters, location: e.target.value })}
-              className="px-3 py-1.5 text-xs border border-surface-200 rounded-lg focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-100 placeholder-ink-light w-28 bg-white"
+              onChange={e =>
+                onChange({
+                  ...filters,
+                  location: e.target.value,
+                })
+              }
+              className="
+                px-3 py-1.5 text-xs rounded-lg
+                border border-slate-200 dark:border-slate-700
+                bg-white dark:bg-slate-800
+                text-slate-700 dark:text-slate-300
+                placeholder:text-slate-400 dark:placeholder:text-slate-500
+                focus:outline-none
+                focus:border-brand-400 dark:focus:border-brand-500
+                focus:ring-1 focus:ring-brand-400/20 dark:focus:ring-brand-500/20
+                w-28 transition-colors
+              "
             />
           </>
         )}
 
-        {/* Employer: active/closed status */}
+        {/* ─────────────────────────────────────
+            Employer Filters
+        ───────────────────────────────────── */}
         {role === 'Employer' && (
           <>
-            <div className="w-px h-5 bg-surface-200" />
+            <Sep />
+
+            {/* Active / Closed status */}
             <div className="flex items-center gap-1">
               {EMPLOYER_STATUSES.map(s => (
                 <Chip
@@ -129,10 +221,14 @@ export default function FilterBar({ role = 'JobSeeker', filters, onChange, onRes
           </>
         )}
 
-        {/* Admin: pending/approved/rejected status */}
+        {/* ─────────────────────────────────────
+            Admin Filters
+        ───────────────────────────────────── */}
         {role === 'Admin' && (
           <>
-            <div className="w-px h-5 bg-surface-200" />
+            <Sep />
+
+            {/* Approval statuses */}
             <div className="flex items-center gap-1">
               {ADMIN_STATUSES.map(s => (
                 <Chip
@@ -146,22 +242,35 @@ export default function FilterBar({ role = 'JobSeeker', filters, onChange, onRes
           </>
         )}
 
-        {/* Clear + count — right side */}
+        {/* ─────────────────────────────────────
+            Right Side Actions
+        ───────────────────────────────────── */}
         <div className="ml-auto flex items-center gap-3">
+
+          {/* Clear all filters */}
           {hasActive && (
             <button
               onClick={onReset}
-              className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink transition-colors"
+              className="
+                flex items-center gap-1.5
+                text-xs text-slate-500 dark:text-slate-400
+                hover:text-slate-800 dark:hover:text-slate-200
+                transition-colors
+              "
             >
-              <X className="w-3 h-3" /> Clear
+              <X className="w-3 h-3" />
+              Clear
             </button>
           )}
+
+          {/* Result count */}
           {showCount && totalCount !== undefined && (
-            <span className="text-xs text-ink-light tabular-nums">
+            <span className="text-xs text-slate-400 dark:text-slate-500 tabular-nums">
               {totalCount} {totalCount === 1 ? 'result' : 'results'}
             </span>
           )}
         </div>
+
       </div>
     </div>
   )

@@ -1,114 +1,158 @@
 import { createContext, useContext, useState, useCallback } from 'react'
 import { CheckCircle, XCircle, AlertCircle, X } from 'lucide-react'
 
-//create global toast context
+/* ─────────────────────────────────────────────
+   Create Toast Context
+   Used to share toast functions globally
+───────────────────────────────────────────── */
 const ToastContext = createContext(null)
 
-//TOAST PROVIDER COMPONENT
+/* ─────────────────────────────────────────────
+   Toast Provider Component
+   Wrap app with this provider
+───────────────────────────────────────────── */
 export function ToastProvider({ children }) {
 
-  //store all active toast notifications
+  // Stores all active toast messages
   const [toasts, setToasts] = useState([])
 
-  /**
-   * addToast function
-   * message = toast text
-   * type = success | error | warning
-   */
+  /* ─────────────────────────────────────────
+     Add new toast notification
+
+     message → text to display
+     type    → success | error | warning
+  ───────────────────────────────────────── */
   const addToast = useCallback((message, type = 'success') => {
 
-    //unique id for each toast
-    const id = Date.now() + Math.random()
+    // Unique toast id
+    const id = Date.now()
 
-    //add new toast into state
+    // Add new toast to list
     setToasts(prev => [
       ...prev,
       { id, message, type }
     ])
 
-    //auto remove toast after 4 seconds
+    // Auto remove toast after 4 seconds
     setTimeout(() => {
-      setToasts(prev =>
-        prev.filter(t => t.id !== id)
-      )
+      setToasts(prev => prev.filter(t => t.id !== id))
     }, 4000)
 
   }, [])
 
-  //remove toast manually
+  /* ─────────────────────────────────────────
+     Remove toast manually
+  ───────────────────────────────────────── */
   const removeToast = (id) =>
-    setToasts(prev =>
-      prev.filter(t => t.id !== id)
-    )
+    setToasts(prev => prev.filter(t => t.id !== id))
 
-  //icons based on toast type
-  const icons = {
-    success: (
-      <CheckCircle className="w-4 h-4 text-emerald-500" />
-    ),
-    error: (
-      <XCircle className="w-4 h-4 text-red-500" />
-    ),
-    warning: (
-      <AlertCircle className="w-4 h-4 text-amber-500" />
-    ),
-  }
+  /* ─────────────────────────────────────────
+     Toast styles based on type
+  ───────────────────────────────────────── */
+  const config = {
 
-  //left border colors based on type
-  const colors = {
-    success: 'border-l-emerald-400',
-    error: 'border-l-red-400',
-    warning: 'border-l-amber-400',
+    // Success toast
+    success: {
+      icon: (
+        <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+      ),
+      bar: 'bg-emerald-500',
+      ring: 'ring-emerald-100 dark:ring-emerald-900/40',
+    },
+
+    // Error toast
+    error: {
+      icon: (
+        <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+      ),
+      bar: 'bg-red-500',
+      ring: 'ring-red-100 dark:ring-red-900/40',
+    },
+
+    // Warning toast
+    warning: {
+      icon: (
+        <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+      ),
+      bar: 'bg-amber-500',
+      ring: 'ring-amber-100 dark:ring-amber-900/40',
+    },
   }
 
   return (
+
+    /* Provide addToast globally */
     <ToastContext.Provider value={{ addToast }}>
 
-      {/* render whole app */}
+      {/* Render application */}
       {children}
 
-      {/* toast container */}
-      <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 w-80">
+      {/* ─────────────────────────────────────
+          Toast Container
+          Positioned bottom-right
+      ───────────────────────────────────── */}
+      <div className="fixed bottom-20 right-5 z-[100] flex flex-col gap-2.5 w-80 pointer-events-none">
 
-        {/* render all active toasts */}
-        {toasts.map(toast => (
+        {/* Loop through all toasts */}
+        {toasts.map(toast => {
 
-          <div
-            key={toast.id}
-            className={`
-              flex items-start gap-3 p-3.5
-              bg-white rounded-xl shadow-modal
-              border border-surface-200 border-l-4
-              ${colors[toast.type]}
-              animate-fadeIn
-            `}
-          >
+          // Get style config for toast type
+          const c = config[toast.type] || config.success
 
-            {/* toast icon */}
-            <span className="mt-0.5">
-              {icons[toast.type]}
-            </span>
-
-            {/* toast message */}
-            <p className="text-sm text-ink flex-1">
-              {toast.message}
-            </p>
-
-            {/* close button */}
-            <button
-              onClick={() => removeToast(toast.id)}
-              className="text-ink-light hover:text-ink"
+          return (
+            <div
+              key={toast.id}
+              className={`
+                pointer-events-auto
+                flex items-start gap-3
+                p-4 rounded-2xl
+                bg-white dark:bg-slate-900
+                border border-slate-100 dark:border-slate-800
+                shadow-xl dark:shadow-slate-900/80
+                ring-1 ${c.ring}
+                animate-fadeIn
+                overflow-hidden relative
+              `}
             >
-              <X className="w-3.5 h-3.5" />
-            </button>
 
-          </div>
-        ))}
+              {/* Left colored status bar */}
+              <div
+                className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${c.bar}`}
+              />
 
+              {/* Toast icon */}
+              <div className="ml-2">
+                {c.icon}
+              </div>
+
+              {/* Toast message */}
+              <p className="text-sm text-slate-800 dark:text-slate-100 flex-1 leading-relaxed">
+                {toast.message}
+              </p>
+
+              {/* Close button */}
+              <button
+                onClick={() => removeToast(toast.id)}
+                className="
+                  flex-shrink-0 p-0.5 rounded-lg
+                  text-slate-400 dark:text-slate-500
+                  hover:text-slate-700 dark:hover:text-slate-300
+                  hover:bg-slate-100 dark:hover:bg-slate-800
+                  transition-colors
+                "
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+
+            </div>
+          )
+        })}
       </div>
     </ToastContext.Provider>
   )
 }
 
-//custom hook for easy toast access
+/* ─────────────────────────────────────────────
+   Custom hook for using toast context
+───────────────────────────────────────────── */
 export const useToast = () => useContext(ToastContext)

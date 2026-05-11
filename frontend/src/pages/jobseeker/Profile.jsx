@@ -2,69 +2,70 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { jobSeekerApi } from '../../api'
-import { avatarColor, educationLabel, initials, jobTypeLabel, parseSkills, workModeLabel } from '../../utils/helpers'
-import { Mail, Pencil, Phone, BookOpen, Briefcase, MapPin, Plus, Calendar, Trash2, Settings, X, Save } from 'lucide-react'
+import {
+  initials, avatarColor, educationLabel,
+  jobTypeLabel, workModeLabel, parseSkills
+} from '../../utils/helpers'
+import {
+  Phone, BookOpen, Briefcase, MapPin, Plus, Pencil,
+  Trash2, Save, X, Calendar, Mail, Settings, ChevronRight
+} from 'lucide-react'
 
 const EDUCATION_OPTS = [
-  { value: '0', label: 'High School' },
-  { value: '1', label: 'Diploma' },
-  { value: '2', label: 'Bachelor' },
-  { value: '3', label: 'Master' },
-  { value: '4', label: 'PhD' },
+  { value: '0', label: 'High School' }, { value: '1', label: 'Diploma' },
+  { value: '2', label: 'Bachelor'    }, { value: '3', label: 'Master'  },
+  { value: '4', label: 'PhD'         },
 ]
 const JOB_TYPE_OPTS = [
-  { value: '', label: 'Any type' },
-  { value: '0', label: 'Full-time' },
-  { value: '1', label: 'Part-time' },
-  { value: '2', label: 'Internship' },
+  { value: '',  label: 'Any type'   }, { value: '0', label: 'Full-time'  },
+  { value: '1', label: 'Part-time'  }, { value: '2', label: 'Internship' },
 ]
 const WORK_MODE_OPTS = [
-  { value: '', label: 'Any mode' },
-  { value: '0', label: 'On-site' },
-  { value: '1', label: 'Remote' },
-  { value: '2', label: 'Hybrid' },
+  { value: '',  label: 'Any mode' }, { value: '0', label: 'On-site' },
+  { value: '1', label: 'Remote'   }, { value: '2', label: 'Hybrid'  },
 ]
 
-// ── Experience Modal ──────────────────────────────────────────────────────────
+/* ── Experience Modal ──────────────────────────────────── */
 function ExperienceModal({ exp, onSave, onClose }) {
-  const { user, updateUser } = useAuth()
-  const { addToast } = useToast()
   const [form, setForm] = useState({
-    jobTitle: exp?.jobTitle || '',
+    jobTitle:    exp?.jobTitle    || '',
     companyName: exp?.companyName || '',
-    startDate: exp?.startDate ? exp.startDate.split('T')[0] : '',
-    endDate: exp?.endDate ? exp.endDate.split('T')[0] : '',
+    startDate:   exp?.startDate   ? exp.startDate.split('T')[0] : '',
+    endDate:     exp?.endDate     ? exp.endDate.split('T')[0]   : '',
     description: exp?.description || '',
   })
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-modal w-full max-w-md animate-fadeIn">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-surface-100">
-          <h3 className="font-display font-semibold text-ink">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl dark:shadow-slate-900/80 w-full max-w-md animate-fadeIn">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+          <h3 className="font-display font-semibold text-slate-900 dark:text-slate-100">
             {exp ? 'Edit Experience' : 'Add Experience'}
           </h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-100 text-ink-muted transition-colors">
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Body */}
         <div className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="label">Job Title *</label>
-              <input
-                type="text" placeholder="Software Engineer" className="input"
+              <input type="text" placeholder="Software Engineer" className="input"
                 value={form.jobTitle}
-                onChange={e => setForm({ ...form, jobTitle: e.target.value })}
-              />
+                onChange={e => setForm({ ...form, jobTitle: e.target.value })} />
             </div>
             <div>
               <label className="label">Company *</label>
-              <input
-                type="text" placeholder="Acme Corp" className="input"
+              <input type="text" placeholder="Acme Corp" className="input"
                 value={form.companyName}
-                onChange={e => setForm({ ...form, companyName: e.target.value })}
-              />
+                onChange={e => setForm({ ...form, companyName: e.target.value })} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -72,31 +73,28 @@ function ExperienceModal({ exp, onSave, onClose }) {
               <label className="label">Start Date</label>
               <input type="date" className="input"
                 value={form.startDate}
-                onChange={e => setForm({ ...form, startDate: e.target.value })}
-              />
+                onChange={e => setForm({ ...form, startDate: e.target.value })} />
             </div>
             <div>
               <label className="label">End Date</label>
               <input type="date" className="input"
                 value={form.endDate}
-                onChange={e => setForm({ ...form, endDate: e.target.value })}
-                placeholder="Leave blank if current"
-              />
-              <p className="text-xs text-ink-light mt-1">Leave blank if current role</p>
+                onChange={e => setForm({ ...form, endDate: e.target.value })} />
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Leave blank if current role</p>
             </div>
           </div>
           <div>
             <label className="label">Description</label>
             <textarea
               placeholder="Key responsibilities and achievements…"
-              rows={3}
-              className="input resize-none"
+              rows={3} className="input resize-none"
               value={form.description}
-              onChange={e => setForm({ ...form, description: e.target.value })}
-            />
+              onChange={e => setForm({ ...form, description: e.target.value })} />
           </div>
         </div>
-        <div className="flex gap-3 px-5 py-4 border-t border-surface-100">
+
+        {/* Footer */}
+        <div className="flex gap-3 px-5 py-4 border-t border-slate-100 dark:border-slate-800">
           <button onClick={onClose} className="btn-outline flex-1 justify-center">Cancel</button>
           <button
             onClick={() => onSave(form)}
@@ -111,44 +109,48 @@ function ExperienceModal({ exp, onSave, onClose }) {
   )
 }
 
-// ── Edit Profile Modal ────────────────────────────────────────────────────────
+/* ── Edit Profile Modal ────────────────────────────────── */
 function EditProfileModal({ profile, onSave, onClose, saving }) {
-  // Re-initialize form EVERY TIME modal opens (profile prop changes)
   const buildForm = (p) => ({
-    fullName: p?.fullName ?? '',
-    phone: p?.phone ?? '',
-    skills: p?.skills ?? '',
-    educationLevel: p?.educationLevel != null ? String(p.educationLevel) : '',
-    preferredJobType: p?.preferredJobType != null ? String(p.preferredJobType) : '',
+    fullName:          p?.fullName          ?? '',
+    phone:             p?.phone             ?? '',
+    skills:            p?.skills            ?? '',
+    educationLevel:    p?.educationLevel    != null ? String(p.educationLevel)    : '',
+    preferredJobType:  p?.preferredJobType  != null ? String(p.preferredJobType)  : '',
     preferredWorkMode: p?.preferredWorkMode != null ? String(p.preferredWorkMode) : '',
   })
 
   const [form, setForm] = useState(() => buildForm(profile))
 
-  // Sync whenever profile prop updates (after a save the parent updates profile state)
-  useEffect(() => {
-    setForm(buildForm(profile))
-  }, [profile])
+  // Sync when profile changes (after save, re-open shows saved values)
+  useEffect(() => { setForm(buildForm(profile)) }, [profile])
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="rounded-2xl w-full max-w-lg animate-fadeIn"
-        style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-modal)' }}>
-        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl dark:shadow-slate-900/80 w-full max-w-lg animate-fadeIn">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2">
-            <Settings className="w-4 h-4" style={{ color: 'var(--ink-muted)' }} />
-            <h3 className="font-display font-semibold" style={{ color: 'var(--ink)' }}>Edit Profile</h3>
+            <Settings className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+            <h3 className="font-display font-semibold text-slate-900 dark:text-slate-100">Edit Profile</h3>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--ink-muted)' }}
-            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
-            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+        {/* Body */}
+        <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
+
+          {/* Basic info */}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: 'var(--ink-light)' }}>Basic Info</p>
+            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-3">
+              Basic Info
+            </p>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="label">Full Name</label>
@@ -167,22 +169,28 @@ function EditProfileModal({ profile, onSave, onClose, saving }) {
 
           {/* Skills */}
           <div>
-            <p className="text-xs font-semibold text-ink-light uppercase tracking-wide mb-3">Skills</p>
+            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-3">
+              Skills
+            </p>
             <label className="label">Skills (comma-separated)</label>
             <input type="text" placeholder="React, TypeScript, Python, SQL…" className="input"
               value={form.skills}
               onChange={e => setForm({ ...form, skills: e.target.value })} />
-            <p className="text-xs text-ink-light mt-1">These are used for job matching and recommendations</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+              Used for job matching and recommendations
+            </p>
           </div>
 
           {/* Preferences */}
           <div>
-            <p className="text-xs font-semibold text-ink-light uppercase tracking-wide mb-3">Preferences</p>
+            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-3">
+              Preferences
+            </p>
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="label">Education</label>
                 <select className="input" value={form.educationLevel}
-                  onChange={e => setForm({ ...form, educationLevel: String(e.target.value)  })}>
+                  onChange={e => setForm({ ...form, educationLevel: e.target.value })}>
                   <option value="">Select</option>
                   {EDUCATION_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
@@ -190,14 +198,14 @@ function EditProfileModal({ profile, onSave, onClose, saving }) {
               <div>
                 <label className="label">Job Type</label>
                 <select className="input" value={form.preferredJobType}
-                  onChange={e => setForm({ ...form, preferredJobType: String(e.target.value) })}>
+                  onChange={e => setForm({ ...form, preferredJobType: e.target.value })}>
                   {JOB_TYPE_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
               <div>
                 <label className="label">Work Mode</label>
                 <select className="input" value={form.preferredWorkMode}
-                  onChange={e => setForm({ ...form, preferredWorkMode: String(e.target.value)  })}>
+                  onChange={e => setForm({ ...form, preferredWorkMode: e.target.value })}>
                   {WORK_MODE_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
@@ -205,13 +213,10 @@ function EditProfileModal({ profile, onSave, onClose, saving }) {
           </div>
         </div>
 
-        <div className="flex gap-3 px-5 py-4 border-t border-surface-100">
+        {/* Footer */}
+        <div className="flex gap-3 px-5 py-4 border-t border-slate-100 dark:border-slate-800">
           <button onClick={onClose} className="btn-outline flex-1 justify-center">Cancel</button>
-          <button
-            onClick={() => onSave(form)}
-            disabled={saving}
-            className="btn-primary flex-1 justify-center"
-          >
+          <button onClick={() => onSave(form)} disabled={saving} className="btn-primary flex-1 justify-center">
             {saving ? (
               <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70" />
@@ -226,19 +231,19 @@ function EditProfileModal({ profile, onSave, onClose, saving }) {
   )
 }
 
-// ── Main Profile Page ─────────────────────────────────────────────────────────
+/* ── Main Profile Page ─────────────────────────────────── */
 export default function Profile() {
   const { user, updateUser } = useAuth()
-  const { addToast } = useToast()
-  const profileId = user?.profileId
+  const { addToast }         = useToast()
+  const profileId            = user?.profileId
 
-  const [profile, setProfile] = useState(null)
+  const [profile, setProfile]       = useState(null)
   const [experiences, setExperiences] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading]       = useState(true)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [showExpModal, setShowExpModal] = useState(false)
-  const [editingExp, setEditingExp] = useState(null)
+  const [saving, setSaving]         = useState(false)
+  const [showExpModal, setShowExpModal]   = useState(false)
+  const [editingExp, setEditingExp]       = useState(null)
 
   useEffect(() => {
     if (!profileId) return
@@ -250,7 +255,7 @@ export default function Profile() {
         setProfile(pRes.data)
         setExperiences(eRes.data || [])
       })
-      .catch(() => { })
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [profileId])
 
@@ -258,15 +263,14 @@ export default function Profile() {
     setSaving(true)
     try {
       const payload = {
-        fullName: form.fullName,
-        phone: form.phone,
-        skills: form.skills,
-        educationLevel: form.educationLevel === '' ? null : Number(form.educationLevel),
-        preferredJobType: form.preferredJobType === '' ? null : Number(form.preferredJobType),
-        preferredWorkMode: form.preferredWorkMode === '' ? null : Number(form.preferredWorkMode),
+        fullName:          form.fullName,
+        phone:             form.phone,
+        skills:            form.skills,
+        educationLevel:    form.educationLevel    !== '' ? parseInt(form.educationLevel)    : null,
+        preferredJobType:  form.preferredJobType  !== '' ? parseInt(form.preferredJobType)  : null,
+        preferredWorkMode: form.preferredWorkMode !== '' ? parseInt(form.preferredWorkMode) : null,
       }
       await jobSeekerApi.updateProfile(profileId, payload)
-      // Update local profile state with saved values
       setProfile(prev => ({ ...prev, ...payload }))
       updateUser({ fullName: form.fullName })
       setShowEditModal(false)
@@ -281,10 +285,10 @@ export default function Profile() {
   const handleSaveExp = async (expForm) => {
     try {
       const payload = {
-        jobTitle: expForm.jobTitle,
+        jobTitle:    expForm.jobTitle,
         companyName: expForm.companyName,
-        startDate: expForm.startDate || null,
-        endDate: expForm.endDate || null,
+        startDate:   expForm.startDate || null,
+        endDate:     expForm.endDate   || null,
         description: expForm.description,
       }
       if (editingExp) {
@@ -329,28 +333,31 @@ export default function Profile() {
     )
   }
 
-  const name = profile?.fullName || user?.userName || 'User'
+  const name     = profile?.fullName || user?.userName || 'User'
   const colorCls = avatarColor(name)
-  const initStr = initials(name)
-  const skills = parseSkills(profile?.skills)
+  const initStr  = initials(name)
+  const skills   = parseSkills(profile?.skills)
 
   return (
     <div className="animate-fadeIn space-y-5">
-      {/* ── Hero card ─────────────────────────────────── */}
+
+      {/* ── Hero card ── */}
       <div className="card relative overflow-hidden">
-        {/* Background accent */}
-        <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-r from-brand-50 to-surface-50 rounded-t-2xl" />
+        {/* Background gradient — works in both modes */}
+        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-brand-600/10 to-slate-500/5 dark:from-brand-600/20 dark:to-slate-700/10 rounded-t-2xl pointer-events-none" />
 
         <div className="relative pt-3">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-end gap-4">
               {/* Avatar */}
-              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-2xl font-bold shadow-lg border-4 border-white ${colorCls}`}>
+              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-2xl font-bold shadow-lg ring-4 ring-white dark:ring-slate-900 ${colorCls}`}>
                 {initStr}
               </div>
               <div className="pb-1">
-                <h1 className="font-display text-xl font-bold text-ink leading-tight">{name}</h1>
-                <p className="text-sm text-ink-muted flex items-center gap-1.5 mt-0.5">
+                <h1 className="font-display text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight">
+                  {name}
+                </h1>
+                <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
                   <Mail className="w-3.5 h-3.5" />
                   {user?.email}
                 </p>
@@ -365,36 +372,36 @@ export default function Profile() {
             </button>
           </div>
 
-          {/* Preference chips */}
-          <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-surface-100">
+          {/* Chips row */}
+          <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
             {profile?.phone && (
-              <span className="flex items-center gap-1.5 text-sm text-ink-muted">
-                <Phone className="w-3.5 h-3.5 text-ink-light" />
+              <span className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+                <Phone className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                 {profile.phone}
               </span>
             )}
-            {profile?.educationLevel !== null && profile?.educationLevel !== undefined && (
-              <span className="badge badge-blue flex items-center gap-1">
+            {profile?.educationLevel != null && (
+              <span className="badge badge-blue">
                 <BookOpen className="w-3 h-3" />
                 {educationLabel(profile.educationLevel)}
               </span>
             )}
-            {profile?.preferredJobType !== null && profile?.preferredJobType !== undefined && (
-              <span className="badge badge-purple flex items-center gap-1">
+            {profile?.preferredJobType != null && (
+              <span className="badge badge-purple">
                 <Briefcase className="w-3 h-3" />
                 {jobTypeLabel(profile.preferredJobType)}
               </span>
             )}
-            {profile?.preferredWorkMode !== null && profile?.preferredWorkMode !== undefined && (
-              <span className="badge badge-green flex items-center gap-1">
+            {profile?.preferredWorkMode != null && (
+              <span className="badge badge-green">
                 <MapPin className="w-3 h-3" />
                 {workModeLabel(profile.preferredWorkMode)}
               </span>
             )}
-            {!profile?.phone && profile?.educationLevel === null && profile?.preferredJobType === null && (
+            {!profile?.phone && profile?.educationLevel == null && profile?.preferredJobType == null && (
               <button
                 onClick={() => setShowEditModal(true)}
-                className="text-sm text-brand-600 hover:text-brand-700 flex items-center gap-1"
+                className="text-sm text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 flex items-center gap-1 transition-colors"
               >
                 Complete your profile for better matches <ChevronRight className="w-3.5 h-3.5" />
               </button>
@@ -403,39 +410,40 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* ── 2-column section ──────────────────────────── */}
+      {/* ── Skills + Details row ── */}
       <div className="grid sm:grid-cols-2 gap-5">
+
         {/* Skills */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display font-semibold text-ink">Skills</h2>
+            <h2 className="font-display font-semibold text-slate-900 dark:text-slate-100">Skills</h2>
             <button
               onClick={() => setShowEditModal(true)}
-              className="p-1.5 rounded-lg text-ink-light hover:text-brand-600 hover:bg-brand-50 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-colors"
             >
               <Pencil className="w-3.5 h-3.5" />
             </button>
           </div>
           {skills.length === 0 ? (
             <div className="text-center py-6">
-              <div className="w-10 h-10 rounded-xl bg-surface-100 flex items-center justify-center mx-auto mb-2">
-                <BookOpen className="w-5 h-5 text-ink-light" />
+              <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-2">
+                <BookOpen className="w-5 h-5 text-slate-400 dark:text-slate-500" />
               </div>
-              <p className="text-sm text-ink-muted mb-2">No skills added yet</p>
-              <button
-                onClick={() => setShowEditModal(true)}
-                className="btn-outline text-xs py-1.5"
-              >
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">No skills added yet</p>
+              <button onClick={() => setShowEditModal(true)} className="btn-outline text-xs py-1.5">
                 <Plus className="w-3.5 h-3.5" /> Add skills
               </button>
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
               {skills.map(s => (
-                <span
-                  key={s}
-                  className="px-3 py-1.5 rounded-xl bg-brand-50 text-brand-700 text-sm font-medium border border-brand-100 hover:bg-brand-100 transition-colors"
-                >
+                <span key={s}
+                  className="px-3 py-1.5 rounded-xl text-sm font-medium
+                             bg-brand-100 dark:bg-brand-900
+                             text-brand-700 dark:text-brand-300
+                             border border-brand-100 dark:border-brand-900
+                             hover:bg-brand-100 dark:hover:bg-brand-950/80
+                             transition-colors">
                   {s}
                 </span>
               ))}
@@ -443,63 +451,36 @@ export default function Profile() {
           )}
         </div>
 
-        {/* Profile completeness / info */}
+        {/* Profile Details */}
         <div className="card">
-          <h2 className="font-display font-semibold text-ink mb-4">Profile Details</h2>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between py-2 border-b border-surface-100">
-              <div className="flex items-center gap-2.5 text-sm">
-                <Phone className="w-4 h-4 text-ink-light flex-shrink-0" />
-                <span className="text-ink-muted">Phone</span>
+          <h2 className="font-display font-semibold text-slate-900 dark:text-slate-100 mb-4">
+            Profile Details
+          </h2>
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            {[
+              { icon: Phone,    label: 'Phone',          value: profile?.phone },
+              { icon: BookOpen, label: 'Education',      value: profile?.educationLevel    != null ? educationLabel(profile.educationLevel)        : null },
+              { icon: Briefcase,label: 'Preferred type', value: profile?.preferredJobType  != null ? jobTypeLabel(profile.preferredJobType)         : null },
+              { icon: MapPin,   label: 'Preferred mode', value: profile?.preferredWorkMode != null ? workModeLabel(profile.preferredWorkMode)       : null },
+            ].map(({ icon: Icon, label, value }) => (
+              <div key={label} className="flex items-center justify-between py-2.5 gap-3">
+                <div className="flex items-center gap-2.5">
+                  <Icon className="w-4 h-4 text-slate-400 dark:text-slate-500 flex-shrink-0" />
+                  <span className="text-sm text-slate-500 dark:text-slate-400">{label}</span>
+                </div>
+                <span className="text-sm font-medium text-slate-900 dark:text-slate-100 text-right">
+                  {value || <span className="text-xs italic text-slate-400 dark:text-slate-500 font-normal">Not set</span>}
+                </span>
               </div>
-              <span className="text-sm font-medium text-ink">
-                {profile?.phone || <span className="text-ink-light italic text-xs">Not set</span>}
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-2 border-b border-surface-100">
-              <div className="flex items-center gap-2.5 text-sm">
-                <BookOpen className="w-4 h-4 text-ink-light flex-shrink-0" />
-                <span className="text-ink-muted">Education</span>
-              </div>
-              <span className="text-sm font-medium text-ink">
-                {profile?.educationLevel !== null && profile?.educationLevel !== undefined
-                  ? educationLabel(profile.educationLevel)
-                  : <span className="text-ink-light italic text-xs">Not set</span>
-                }
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-2 border-b border-surface-100">
-              <div className="flex items-center gap-2.5 text-sm">
-                <Briefcase className="w-4 h-4 text-ink-light flex-shrink-0" />
-                <span className="text-ink-muted">Preferred type</span>
-              </div>
-              <span className="text-sm font-medium text-ink">
-                {profile?.preferredJobType !== null && profile?.preferredJobType !== undefined
-                  ? jobTypeLabel(profile.preferredJobType)
-                  : <span className="text-ink-light italic text-xs">Not set</span>
-                }
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center gap-2.5 text-sm">
-                <MapPin className="w-4 h-4 text-ink-light flex-shrink-0" />
-                <span className="text-ink-muted">Preferred mode</span>
-              </div>
-              <span className="text-sm font-medium text-ink">
-                {profile?.preferredWorkMode !== null && profile?.preferredWorkMode !== undefined
-                  ? workModeLabel(profile.preferredWorkMode)
-                  : <span className="text-ink-light italic text-xs">Not set</span>
-                }
-              </span>
-            </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* ── Experience ─────────────────────────────────── */}
+      {/* ── Experience ── */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display font-semibold text-ink">Experience</h2>
+          <h2 className="font-display font-semibold text-slate-900 dark:text-slate-100">Experience</h2>
           <button
             onClick={() => { setEditingExp(null); setShowExpModal(true) }}
             className="btn-outline text-xs py-1.5"
@@ -509,9 +490,9 @@ export default function Profile() {
         </div>
 
         {experiences.length === 0 ? (
-          <div className="text-center py-8 border-2 border-dashed border-surface-200 rounded-xl">
-            <Briefcase className="w-8 h-8 text-ink-light mx-auto mb-2" />
-            <p className="text-sm text-ink-muted mb-3">No experience added yet</p>
+          <div className="text-center py-8 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
+            <Briefcase className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">No experience added yet</p>
             <button
               onClick={() => { setEditingExp(null); setShowExpModal(true) }}
               className="btn-outline text-xs py-1.5"
@@ -520,27 +501,28 @@ export default function Profile() {
             </button>
           </div>
         ) : (
-          <div className="space-y-0">
+          <div>
             {experiences.map((exp, idx) => (
               <div key={exp.experienceId}>
-                {idx > 0 && <div className="border-t border-surface-100 my-4" />}
+                {idx > 0 && <div className="border-t border-slate-100 dark:border-slate-800 my-4" />}
                 <div className="flex items-start gap-4">
-                  {/* Timeline dot */}
-                  <div className="relative flex-shrink-0 mt-1">
-                    <div className="w-9 h-9 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center">
-                      <Briefcase className="w-4 h-4 text-brand-500" />
+                  {/* Icon */}
+                  <div className="relative flex-shrink-0 mt-0.5">
+                    <div className="w-9 h-9 rounded-xl bg-brand-100 dark:bg-brand-900 border border-brand-100 dark:border-brand-900 flex items-center justify-center">
+                      <Briefcase className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                     </div>
                     {idx < experiences.length - 1 && (
-                      <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 w-px h-8 bg-surface-200" />
+                      <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 w-px h-8 bg-slate-200 dark:bg-slate-700" />
                     )}
                   </div>
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className="font-semibold text-ink">{exp.jobTitle}</p>
-                        <p className="text-sm text-brand-600 font-medium">{exp.companyName}</p>
+                        <p className="font-semibold text-slate-900 dark:text-slate-100">{exp.jobTitle}</p>
+                        <p className="text-sm text-brand-600 dark:text-brand-400 font-medium">{exp.companyName}</p>
                         {(exp.startDate || exp.endDate) && (
-                          <p className="text-xs text-ink-light mt-1 flex items-center gap-1">
+                          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             {exp.startDate
                               ? new Date(exp.startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
@@ -555,20 +537,22 @@ export default function Profile() {
                       <div className="flex gap-1 flex-shrink-0">
                         <button
                           onClick={() => { setEditingExp(exp); setShowExpModal(true) }}
-                          className="p-1.5 rounded-lg text-ink-light hover:text-brand-600 hover:bg-brand-50 transition-colors"
+                          className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-colors"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDeleteExp(exp.experienceId)}
-                          className="p-1.5 rounded-lg text-ink-light hover:text-red-500 hover:bg-red-50 transition-colors"
+                          className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
                     {exp.description && (
-                      <p className="text-sm text-ink-muted mt-2 leading-relaxed">{exp.description}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                        {exp.description}
+                      </p>
                     )}
                   </div>
                 </div>

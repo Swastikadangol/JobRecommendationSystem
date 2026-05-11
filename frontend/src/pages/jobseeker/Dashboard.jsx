@@ -76,40 +76,39 @@ export default function Dashboard() {
   // -----------------------------
   // STATS (UPGRADED)
   // -----------------------------
-  const stats = [
-    {
-      label: 'Applications',
-      value: apps.length,
-      icon: FileText,
-      color: 'text-brand-600',
-      bg: 'bg-brand-50',
-      sub: `${apps.length} total • ${appsThisWeek > 0 ? `+${appsThisWeek} this week` : 'No activity this week'}`
-    },
-    {
-      label: 'Best Matches',
-      value: recs.filter(r => r.matchScore > 70).length,
-      icon: Star,
-      color: 'text-amber-500',
-      bg: 'bg-amber-50',
-      sub: recs.length
-        ? `↑ +${matchImprovement}% match quality`
-        : 'Improve profile for better matches'
-    },
-    {
-      label: 'Profile Strength',
-      value: `${profileStrength}%`,
-      icon: Briefcase,
-      color: 'text-green-600',
-      bg: 'bg-green-50',
-      sub:
-        profileStrength < 60
-          ? 'Add skills to improve'
-          : profileStrength < 80
-            ? 'Looking good'
-            : 'Strong profile'
-    }
-  ]
-
+ const stats = [
+  {
+    label: 'Applications',
+    value: apps.length,
+    icon: FileText,
+    color: 'text-brand-600 dark:text-brand-400',
+    bg: 'bg-brand-50 dark:bg-brand-500/10',
+    sub: `${apps.length} total • ${appsThisWeek > 0 ? `+${appsThisWeek} this week` : 'No activity this week'}`
+  },
+  {
+    label: 'Best Matches',
+    value: recs.filter(r => r.matchScore > 70).length,
+    icon: Star,
+    color: 'text-amber-500 dark:text-amber-400',
+    bg: 'bg-amber-50 dark:bg-amber-500/10',
+    sub: recs.length
+      ? `↑ +${matchImprovement}% match quality`
+      : 'Improve profile for better matches'
+  },
+  {
+    label: 'Profile Strength',
+    value: `${profileStrength}%`,
+    icon: Briefcase,
+    color: 'text-green-600 dark:text-green-400',
+    bg: 'bg-green-50 dark:bg-green-500/10',
+    sub:
+      profileStrength < 60
+        ? 'Add skills to improve'
+        : profileStrength < 80
+          ? 'Looking good'
+          : 'Strong profile'
+  }
+]
   const hour = new Date().getHours()
   const greeting =
     hour < 12 ? 'Good morning' :
