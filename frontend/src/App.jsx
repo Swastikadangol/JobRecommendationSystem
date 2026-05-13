@@ -1,19 +1,38 @@
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
 import { ThemeProvider } from './context/ThemeContext'
 import Sidebar from './components/shared/Sidebar'
 import ThemeToggle from './components/shared/ThemeToggle'
 
-import Landing     from './pages/shared/Landing'
-import Login       from './pages/shared/Login'
-import Register    from './pages/shared/Register'
-import Dashboard   from './pages/jobseeker/Dashboard'
-import BrowseJobs  from './pages/jobseeker/BrowseJobs'
+import Landing      from './pages/shared/Landing'
+import Login        from './pages/shared/Login'
+import Register     from './pages/shared/Register'
+import Dashboard    from './pages/jobseeker/Dashboard'
+import BrowseJobs   from './pages/jobseeker/BrowseJobs'
 import Recommendations from './pages/jobseeker/Recommendations'
 import Applications from './pages/jobseeker/Applications'
-import Profile     from './pages/jobseeker/Profile'
-import JobDetail   from './pages/jobseeker/JobDetail'
+import Profile      from './pages/jobseeker/Profile'
+import JobDetail    from './pages/jobseeker/JobDetail'
+
+// Listens for the auth:logout event fired by the API interceptor
+// Uses React Router navigate — no hard page reload, theme preserved
+function AuthLogoutListener() {
+  const navigate  = useNavigate()
+  const { logout } = useAuth()
+
+  useEffect(() => {
+    const handler = () => {
+      logout()
+      navigate('/login', { replace: true })
+    }
+    window.addEventListener('auth:logout', handler)
+    return () => window.removeEventListener('auth:logout', handler)
+  }, [logout, navigate])
+
+  return null
+}
 
 function AppLayout() {
   return (
@@ -22,7 +41,6 @@ function AppLayout() {
       <main className="flex-1 ml-60 p-6 lg:p-8 overflow-auto">
         <div className="max-w-6xl mx-auto"><Outlet /></div>
       </main>
-      <ThemeToggle />
     </div>
   )
 }
@@ -46,9 +64,9 @@ function PublicOnly({ children }) {
   if (loading) return null
   if (user) {
     const r = user.role
-    if (r === 0 || r === 'JobSeeker') return <Navigate to="/dashboard" replace />
-    if (r === 1 || r === 'Employer')  return <Navigate to="/employer/dashboard" replace />
-    return <Navigate to="/admin/dashboard" replace />
+    if (r === 0 || r === 'JobSeeker') return <Navigate to="/dashboard"          replace />
+    if (r === 1 || r === 'Employer')  return <Navigate to="/employer/dashboard"  replace />
+    return                                          <Navigate to="/admin/dashboard" replace />
   }
   return children
 }
@@ -59,24 +77,25 @@ export default function App() {
       <ThemeProvider>
         <AuthProvider>
           <ToastProvider>
+            <AuthLogoutListener />
             <Routes>
-              <Route path="/" element={<PublicOnly><Landing /></PublicOnly>} />
-              <Route path="/login"    element={<PublicOnly><Login /></PublicOnly>} />
+              <Route path="/"         element={<PublicOnly><Landing  /></PublicOnly>} />
+              <Route path="/login"    element={<PublicOnly><Login    /></PublicOnly>} />
               <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
 
               <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
-                <Route path="/dashboard"       element={<Dashboard />} />
-                <Route path="/browse"          element={<BrowseJobs />} />
+                <Route path="/dashboard"       element={<Dashboard      />} />
+                <Route path="/browse"          element={<BrowseJobs     />} />
                 <Route path="/recommendations" element={<Recommendations />} />
-                <Route path="/applications"    element={<Applications />} />
-                <Route path="/profile"         element={<Profile />} />
-                <Route path="/jobs/:id"        element={<JobDetail />} />
+                <Route path="/applications"    element={<Applications   />} />
+                <Route path="/profile"         element={<Profile        />} />
+                <Route path="/jobs/:id"        element={<JobDetail      />} />
                 <Route path="/employer/*" element={<div className="flex items-center justify-center h-64 text-slate-400 dark:text-slate-500">Employer portal — coming soon</div>} />
                 <Route path="/admin/*"    element={<div className="flex items-center justify-center h-64 text-slate-400 dark:text-slate-500">Admin portal — coming soon</div>} />
               </Route>
+
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-            {/* ThemeToggle also shown on public pages (landing, login, register) */}
             <ThemeToggle />
           </ToastProvider>
         </AuthProvider>
