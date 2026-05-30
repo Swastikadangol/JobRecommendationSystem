@@ -107,7 +107,7 @@ export default function BrowseJobs() {
           <p className="text-sm text-ink-muted">Try adjusting your filters or search term</p>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-7">
           {filtered.map(job => (
             <JobCard key={job.jobId} job={job} role="JobSeeker" />
           ))}

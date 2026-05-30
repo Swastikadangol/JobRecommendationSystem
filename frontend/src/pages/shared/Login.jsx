@@ -6,17 +6,16 @@ import { authApi } from '../../api'
 import { Zap, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react'
 
 export default function Login() {
-  const [form, setForm]             = useState({ email: '', password: '' })
-  const [showPw, setShowPw]         = useState(false)
-  const [loading, setLoading]       = useState(false)
-  const [errors, setErrors]         = useState({})
+  const [form, setForm]               = useState({ email: '', password: '' })
+  const [showPw, setShowPw]           = useState(false)
+  const [loading, setLoading]         = useState(false)
+  const [errors, setErrors]           = useState({})
   const [serverError, setServerError] = useState('')
 
   const { login }    = useAuth()
   const { addToast } = useToast()
   const navigate     = useNavigate()
 
-  // Only check if fields are filled — no length checks on login
   const validate = () => {
     const e = {}
     if (!form.email.trim()) {
@@ -24,21 +23,19 @@ export default function Login() {
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
       e.email = 'Enter a valid email address'
     }
-    if (!form.password) {
-      e.password = 'Password is required'
-    }
+    if (!form.password) e.password = 'Password is required'
     return e
   }
 
   const handleChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }))
-    if (errors[field])  setErrors(prev => ({ ...prev, [field]: '' }))
-    if (serverError)    setServerError('')
+    // only clear the field-level error, NOT the server error
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setServerError('')
+    // don't clear serverError here — keep it visible until a new attempt completes
 
     const errs = validate()
     if (Object.keys(errs).length > 0) {
@@ -47,6 +44,7 @@ export default function Login() {
     }
 
     setLoading(true)
+    setServerError('') // clear only right before the new request fires
     try {
       const { data } = await authApi.login(form)
       login(data)
@@ -55,7 +53,6 @@ export default function Login() {
       else if (data.role === 1 || data.role === 'Employer')  navigate('/employer/dashboard')
       else                                                    navigate('/admin/dashboard')
     } catch (err) {
-      // Safely turn any API error shape into a plain string
       const raw = err.response?.data
       const msg =
         typeof raw === 'string' ? raw
@@ -92,7 +89,7 @@ export default function Login() {
             Sign in to your account
           </p>
 
-          {/* Server error banner */}
+          {/* Server error — stays until next submit */}
           {serverError && (
             <div className="flex items-start gap-2.5 p-3 mb-5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900">
               <AlertCircle className="w-4 h-4 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" />

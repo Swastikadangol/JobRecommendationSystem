@@ -1,6 +1,6 @@
 ﻿using JobRecommendationAPI.DTOs.Application;
-using JobRecommendationAPI.DTOs.Profile.Employer.Experience;
 using JobRecommendationAPI.DTOs.Profile.JobSeeker;
+using JobRecommendationAPI.DTOs.Profile.JobSeeker.Experience;
 using JobRecommendationAPI.Enums;
 using JobRecommendationAPI.Models;
 using JobRecommendationAPI.Repositories.Interfaces;

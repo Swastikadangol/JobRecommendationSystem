@@ -6,31 +6,41 @@ import { ThemeProvider } from './context/ThemeContext'
 import Sidebar from './components/shared/Sidebar'
 import ThemeToggle from './components/shared/ThemeToggle'
 
+// ── Shared pages ──
 import Landing      from './pages/shared/Landing'
 import Login        from './pages/shared/Login'
 import Register     from './pages/shared/Register'
-import Dashboard    from './pages/jobseeker/Dashboard'
-import BrowseJobs   from './pages/jobseeker/BrowseJobs'
+
+// ── Job Seeker pages ──
+import Dashboard       from './pages/jobseeker/Dashboard'
+import BrowseJobs      from './pages/jobseeker/BrowseJobs'
 import Recommendations from './pages/jobseeker/Recommendations'
-import Applications from './pages/jobseeker/Applications'
-import Profile      from './pages/jobseeker/Profile'
-import JobDetail    from './pages/jobseeker/JobDetail'
+import Applications    from './pages/jobseeker/Applications'
+import Profile         from './pages/jobseeker/Profile'
+import JobDetail       from './pages/jobseeker/JobDetail'
 
-// Listens for the auth:logout event fired by the API interceptor
-// Uses React Router navigate — no hard page reload, theme preserved
+// ── Employer pages ──
+import EmployerDashboard  from './pages/employer/EmployerDashboard'
+import EmployerJobs       from './pages/employer/EmployerJobs'
+import EmployerPostJob    from './pages/employer/EmployerPostJob'
+import EmployerEditJob    from './pages/employer/EmployerEditJob'
+import EmployerApplicants from './pages/employer/EmployerApplicants'
+import EmployerCandidates from './pages/employer/EmployerCandidates'
+import EmployerProfile    from './pages/employer/EmployerProfile'
+
+// ── Admin pages (coming soon) ──
+// import AdminDashboard from './pages/admin/AdminDashboard'
+// import AdminJobs      from './pages/admin/AdminJobs'
+// import AdminUsers     from './pages/admin/AdminUsers'
+
 function AuthLogoutListener() {
-  const navigate  = useNavigate()
+  const navigate   = useNavigate()
   const { logout } = useAuth()
-
   useEffect(() => {
-    const handler = () => {
-      logout()
-      navigate('/login', { replace: true })
-    }
+    const handler = () => { logout(); navigate('/login', { replace: true }) }
     window.addEventListener('auth:logout', handler)
     return () => window.removeEventListener('auth:logout', handler)
   }, [logout, navigate])
-
   return null
 }
 
@@ -38,12 +48,17 @@ function AppLayout() {
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar />
-      <main className="flex-1 ml-60 p-6 lg:p-8 overflow-auto">
-        <div className="max-w-6xl mx-auto"><Outlet /></div>
+
+      <main className="flex-1 md:ml-60 pt-14 md:pt-0 p-6 lg:p-8 overflow-auto">
+        <div className="w-full max-w-full px-4 lg:px-8">
+          <Outlet />
+        </div>
       </main>
     </div>
   )
 }
+
+
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth()
@@ -64,9 +79,9 @@ function PublicOnly({ children }) {
   if (loading) return null
   if (user) {
     const r = user.role
-    if (r === 0 || r === 'JobSeeker') return <Navigate to="/dashboard"          replace />
-    if (r === 1 || r === 'Employer')  return <Navigate to="/employer/dashboard"  replace />
-    return                                          <Navigate to="/admin/dashboard" replace />
+    if (r === 0 || r === 'JobSeeker') return <Navigate to="/dashboard"         replace />
+    if (r === 1 || r === 'Employer')  return <Navigate to="/employer/dashboard" replace />
+    return                                   <Navigate to="/admin/dashboard"    replace />
   }
   return children
 }
@@ -79,22 +94,44 @@ export default function App() {
           <ToastProvider>
             <AuthLogoutListener />
             <Routes>
+
+              {/* ── Public ── */}
               <Route path="/"         element={<PublicOnly><Landing  /></PublicOnly>} />
               <Route path="/login"    element={<PublicOnly><Login    /></PublicOnly>} />
               <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
 
+              {/* ── Protected ── */}
               <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
+
+                {/* Job Seeker */}
                 <Route path="/dashboard"       element={<Dashboard      />} />
                 <Route path="/browse"          element={<BrowseJobs     />} />
                 <Route path="/recommendations" element={<Recommendations />} />
                 <Route path="/applications"    element={<Applications   />} />
                 <Route path="/profile"         element={<Profile        />} />
                 <Route path="/jobs/:id"        element={<JobDetail      />} />
-                <Route path="/employer/*" element={<div className="flex items-center justify-center h-64 text-slate-400 dark:text-slate-500">Employer portal — coming soon</div>} />
-                <Route path="/admin/*"    element={<div className="flex items-center justify-center h-64 text-slate-400 dark:text-slate-500">Admin portal — coming soon</div>} />
+
+                {/* Employer */}
+                <Route path="/employer/dashboard"              element={<EmployerDashboard  />} />
+                <Route path="/employer/jobs"                   element={<EmployerJobs       />} />
+                <Route path="/employer/post-job"               element={<EmployerPostJob    />} />
+                <Route path="/employer/jobs/:jobId/edit"       element={<EmployerEditJob    />} />
+                <Route path="/employer/jobs/:jobId/applicants" element={<EmployerApplicants />} />
+                <Route path="/employer/candidates"             element={<EmployerCandidates />} />
+                <Route path="/employer/profile"                element={<EmployerProfile    />} />
+
+                {/* Admin placeholder */}
+                <Route path="/admin/*" element={
+                  <div className="flex items-center justify-center h-64 text-slate-400 dark:text-slate-500 text-sm">
+                    Admin portal — coming soon
+                  </div>
+                } />
+
               </Route>
 
+              {/* Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />
+
             </Routes>
             <ThemeToggle />
           </ToastProvider>

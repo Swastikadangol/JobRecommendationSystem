@@ -1,4 +1,4 @@
-﻿using JobRecommendationAPI.DTOs.Profile.Employer.Experience;
+﻿using JobRecommendationAPI.DTOs.Profile.JobSeeker.Experience;
 
 namespace JobRecommendationAPI.DTOs.Profile.JobSeeker
 {

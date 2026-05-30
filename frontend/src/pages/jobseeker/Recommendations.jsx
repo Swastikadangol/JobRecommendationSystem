@@ -116,7 +116,7 @@ export default function Recommendations() {
           )}
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-8">
           {filtered.map(job => <JobCard key={job.jobId} job={job} role="JobSeeker" showMatch />)}
         </div>
       )}

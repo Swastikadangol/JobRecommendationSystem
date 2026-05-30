@@ -106,12 +106,14 @@ api.interceptors.request.use(config => {
   return config
 })
 
-// Handle 401 globally
+// Handle 401 globally — but NOT for auth endpoints (login returns 401 on wrong password)
 api.interceptors.response.use(
   res => res,
   err => {
-    if (err.response?.status === 401) {
+    const isAuthEndpoint = err.config?.url?.includes('/api/auth/')
+    if (err.response?.status === 401 && !isAuthEndpoint) {
       localStorage.clear()
+      window.dispatchEvent(new Event('auth:logout'))
       window.location.href = '/login'
     }
     return Promise.reject(err)
@@ -163,3 +165,31 @@ export const jobSeekerApi = {
 }
 
 export default api
+// ───── EMPLOYER ─────
+export const employerApi = {
+  getProfile:      (id)            => api.get(`/api/employer/profile/${id}`),
+  updateProfile:   (id, data)      => api.put(`/api/employer/profile/${id}`, data),
+  postJob:         (id, data)      => api.post(`/api/employer/postjobs/${id}`, data),
+  getMyJobs:       (id)            => api.get(`/api/employer/myjobs/${id}`),
+  updateJob:       (jobId, data)   => api.put(`/api/employer/jobs/${jobId}`, data),
+  deleteJob:       (jobId)         => api.delete(`/api/employer/jobs/${jobId}`),
+  getApplicants:   (jobId)         => api.get(`/api/employer/jobs/${jobId}/applicants`),
+  updateAppStatus: (appId, status) => api.put(
+    `/api/employer/applications/${appId}/status`,
+    JSON.stringify(status),
+    { headers: { 'Content-Type': 'application/json' } }
+  ),
+}
+
+// ───── ADMIN ─────
+export const adminApi = {
+  getStats:      ()       => api.get('/api/admin/stats'),
+  getUsers:      ()       => api.get('/api/admin/users'),
+  getJobSeekers: ()       => api.get('/api/admin/users/jobseekers'),
+  getEmployers:  ()       => api.get('/api/admin/users/employers'),
+  toggleUser:    (id)     => api.put(`/api/admin/users/${id}/toggle`),
+  deleteUser:    (id)     => api.delete(`/api/admin/users/${id}`),
+  getJobs:       (params) => api.get('/api/admin/jobs', { params }),
+  approveJob:    (id)     => api.put(`/api/admin/jobs/${id}/approve`),
+  rejectJob:     (id)     => api.put(`/api/admin/jobs/${id}/reject`),
+}

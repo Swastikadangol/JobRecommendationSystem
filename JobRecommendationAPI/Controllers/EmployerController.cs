@@ -33,24 +33,37 @@ namespace JobRecommendationAPI.Controllers
             _recommender = recommender;
         }
 
-        // GET api/employer/{id}
+        // ── GET api/employer/profile/{id} ──────────────────────────
         [HttpGet("profile/{id}")]
         public async Task<IActionResult> GetProfile(int id)
         {
             var emp = await _empRepo.GetByIdAsync(id);
             if (emp == null) return NotFound("Employer not found.");
 
-            return Ok(new
+            return Ok(new EmployerProfileResponseDto
             {
-                emp.EmployerId,
-                emp.UserId,
-                emp.CompanyName,
-                emp.CompanyNumber,
-                Email = emp.User?.Email
+                EmployerId = emp.EmployerId,
+                UserId = emp.UserId,
+                CompanyName = emp.CompanyName,
+                ContactNumber = emp.CompanyNumber,
+                Email = emp.User?.Email,
+                Website = emp.Website,
+                About = emp.About,
+                Industry = emp.Industry,
+                CompanySize = emp.CompanySize,
+                City = emp.City,
+                Province = emp.Province,
+                PostalCode = emp.PostalCode,
+                Address = emp.Address,
+                LinkedIn = emp.LinkedIn,
+                Facebook = emp.Facebook,
+                Twitter = emp.Twitter,
+                Instagram = emp.Instagram,
+                ProfileCreatedAt = emp.ProfileCreatedAt
             });
         }
 
-        // PUT api/employer/{id}
+        // ── PUT api/employer/profile/{id} ──────────────────────────
         [HttpPut("profile/{id}")]
         public async Task<IActionResult> UpdateProfile(int id, UpdateEmployerDto dto)
         {
@@ -59,9 +72,40 @@ namespace JobRecommendationAPI.Controllers
 
             emp.CompanyName = dto.CompanyName;
             emp.CompanyNumber = dto.ContactNumber;
+            emp.Website = dto.Website;
+            emp.About = dto.About;
+            emp.Industry = dto.Industry;
+            emp.CompanySize = dto.CompanySize;
+            emp.City = dto.City;
+            emp.Province = dto.Province;
+            emp.PostalCode = dto.PostalCode;
+            emp.Address = dto.Address;
+            emp.LinkedIn = dto.LinkedIn;
+            emp.Facebook = dto.Facebook;
+            emp.Twitter = dto.Twitter;
+            emp.Instagram = dto.Instagram;
 
             await _empRepo.UpdateAsync(emp);
-            return Ok(new { emp.EmployerId, emp.CompanyName, emp.CompanyNumber });
+
+            return Ok(new EmployerProfileResponseDto
+            {
+                EmployerId = emp.EmployerId,
+                CompanyName = emp.CompanyName,
+                ContactNumber = emp.CompanyNumber,
+                Email = emp.User?.Email,
+                Website = emp.Website,
+                About = emp.About,
+                Industry = emp.Industry,
+                CompanySize = emp.CompanySize,
+                City = emp.City,
+                Province = emp.Province,
+                PostalCode = emp.PostalCode,
+                Address = emp.Address,
+                LinkedIn = emp.LinkedIn,
+                Facebook = emp.Facebook,
+                Twitter = emp.Twitter,
+                Instagram = emp.Instagram,
+            });
         }
 
         // ── Job Management ───────────────────────────────────────
