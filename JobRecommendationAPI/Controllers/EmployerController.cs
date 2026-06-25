@@ -210,18 +210,35 @@ namespace JobRecommendationAPI.Controllers
                 JobId = a.JobId,
                 JobTitle = a.Job?.JobTitle ?? "",
                 CompanyName = a.Job?.Employer?.CompanyName ?? "",
+
+                JobSeekerId = a.JobSeekerId,
                 ApplicantName = a.JobSeeker?.FullName ?? "",
                 ApplicantEmail = a.JobSeeker?.User?.Email ?? "",
                 ApplicantSkills = a.JobSeeker?.Skills,
+                ApplicantPhone = a.JobSeeker?.Phone,
+                ApplicantEducation = a.JobSeeker?.EducationLevel?.ToString(),
+
                 ApplicationStatus = a.ApplicationStatus,
 
-                //calcualte
                 MatchScore = _recommender.CalculateMatchScore(
                     a.JobSeeker?.Skills,
                     a.Job?.RequiredSkills
-    ),
+                ),
 
-                AppliedAt = a.AppliedAt
+                AppliedAt = a.AppliedAt,
+
+                Experiences = (a.JobSeeker?.Experiences ?? new List<Experience>())
+                    .OrderByDescending(e => e.StartDate)
+                    .Select(e => new ExperienceDto
+                    {
+                        ExperienceId = e.ExperienceId,
+                        JobTitle = e.JobTitle,
+                        CompanyName = e.CompanyName,
+                        StartDate = e.StartDate,
+                        EndDate = e.EndDate,
+                        Description = e.Description
+                    })
+                    .ToList()
             });
 
             return Ok(response);

@@ -28,10 +28,15 @@ import EmployerApplicants from './pages/employer/EmployerApplicants'
 import EmployerCandidates from './pages/employer/EmployerCandidates'
 import EmployerProfile    from './pages/employer/EmployerProfile'
 
-// ── Admin pages (coming soon) ──
-// import AdminDashboard from './pages/admin/AdminDashboard'
-// import AdminJobs      from './pages/admin/AdminJobs'
-// import AdminUsers     from './pages/admin/AdminUsers'
+
+
+//admin
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminJobs      from './pages/admin/AdminJobs'
+import AdminUsers     from './pages/admin/AdminUsers'
+import AdminEmployers     from './pages/admin/AdminEmployers'
+import AdminApplications from './pages/Admin/AdminApplications'
+import AdminReports from './pages/Admin/AdminReports'
 
 function AuthLogoutListener() {
   const navigate   = useNavigate()
@@ -121,12 +126,13 @@ export default function App() {
                 <Route path="/employer/profile"                element={<EmployerProfile    />} />
 
                 {/* Admin placeholder */}
-                <Route path="/admin/*" element={
-                  <div className="flex items-center justify-center h-64 text-slate-400 dark:text-slate-500 text-sm">
-                    Admin portal — coming soon
-                  </div>
-                } />
-
+                {/* Admin */}
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/jobs"      element={<AdminJobs      />} />
+                <Route path="/admin/users"     element={<AdminUsers     />} />
+                <Route path="/admin/employers" element={<AdminEmployers />} />
+                <Route path="/admin/applications" element={<AdminApplications />} />
+                <Route path="/admin/reports"      element={<AdminReports      />} />
               </Route>
 
               {/* Fallback */}

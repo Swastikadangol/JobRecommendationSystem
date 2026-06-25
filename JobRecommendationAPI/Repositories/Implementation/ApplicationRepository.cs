@@ -35,13 +35,17 @@ namespace JobRecommendationAPI.Repositories.Implementation
 
 
         //fetch only the application of specific job usinf jobid
-        public async Task<IEnumerable<Application>> GetByJobAsync(int jobId) =>
-            await _db.Applications
-            .Include(a => a.JobSeeker)
+        public async Task<IEnumerable<Application>> GetByJobAsync(int jobId)
+{
+    return await _db.Applications
+        .Include(a => a.JobSeeker)
             .ThenInclude(js => js!.User)
-            .Where(a => a.JobId == jobId)
-            .OrderByDescending(a => a.AppliedAt)
-            .ToListAsync();
+        .Include(a => a.JobSeeker)
+            .ThenInclude(js => js!.Experiences)
+        .Where(a => a.JobId == jobId)
+        .OrderByDescending(a => a.AppliedAt)
+        .ToListAsync();
+}
 
         //fetch all the applications in db with alll details with job jobseeker user
         public async Task<IEnumerable<Application>> GetAllAsync() =>

@@ -77,12 +77,14 @@ namespace JobRecommendationAPI.Data
             //ssed admin user ( password: admin123)
             //BCrypt is a password hashing algorithm — it converts a plain password into a secure, unreadable hash.
             // Seed admin user (password: admin123)
+//             Email: admin@jobrec.com
+// Password: Admin@123
             modelBuilder.Entity<User>().HasData(new User
             {
                 UserId = 1,
                 UserName = "admin",
                 Email = "admin@jobrec.com",
-                Password = "$2a$11$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.",
+                Password = "$2a$11$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LPVyNa1g8Ue.",
                 Role = Role.Admin,
                 Status = UserStatus.Active,
                 CreatedAt = new DateTime(2026, 1, 1)

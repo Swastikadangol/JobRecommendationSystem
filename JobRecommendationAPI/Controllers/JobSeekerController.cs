@@ -1,5 +1,4 @@
-﻿using JobRecommendationAPI.DTOs.Application;
-using JobRecommendationAPI.DTOs.Profile.JobSeeker;
+﻿using JobRecommendationAPI.DTOs.Profile.JobSeeker;
 using JobRecommendationAPI.DTOs.Profile.JobSeeker.Experience;
 using JobRecommendationAPI.Enums;
 using JobRecommendationAPI.Models;
@@ -7,13 +6,14 @@ using JobRecommendationAPI.Repositories.Interfaces;
 using JobRecommendationAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ExperienceDto = JobRecommendationAPI.DTOs.Application.ExperienceDto;
 
 namespace JobRecommendationAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "JobSeeker")]
-    public class JobSeekerController : ControllerBase
+    public class JobSeekerController : ControllerBase 
     {
         private readonly IJobSeekerRepository _jsRepo;
         private readonly IJobRepository _jobRepo;

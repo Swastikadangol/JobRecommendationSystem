@@ -3,6 +3,7 @@ using JobRecommendationAPI.Enums;
 using JobRecommendationAPI.Models;
 using JobRecommendationAPI.Repositories.Interfaces;
 using JobRecommendationAPI.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobRecommendationAPI.Controllers
@@ -151,6 +152,31 @@ namespace JobRecommendationAPI.Controllers
                 companyName,
                 token
             });
+        }
+
+        [HttpPost("test-login")]
+        [AllowAnonymous]
+        public async Task<IActionResult> TestLogin([FromBody] LoginDto dto)
+        {
+            var user = await _userRepo.GetByEmailAsync(dto.Email);
+            if (user == null) return Ok(new { step = "failed", reason = "user not found" });
+
+            var verify = BCrypt.Net.BCrypt.Verify(dto.Password, user.Password);
+            return Ok(new
+            {
+                step = "found user",
+                passwordMatches = verify,
+                storedHashStart = user.Password.Substring(0, 15),
+                status = user.Status
+            });
+        }
+
+        [HttpGet("generate-hash/{password}")]
+        [AllowAnonymous]
+        public IActionResult GenerateHash(string password)
+        {
+            var hash = BCrypt.Net.BCrypt.HashPassword(password);
+            return Ok(new { password, hash });
         }
     }
 }
