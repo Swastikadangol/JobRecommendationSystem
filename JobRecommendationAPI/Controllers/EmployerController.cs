@@ -157,6 +157,7 @@ namespace JobRecommendationAPI.Controllers
                 Location = j.Location,
                 SalaryRange = j.SalaryRange,
                 Deadline = j.Deadline,
+                IsActive = j.IsActive,
                 Status = j.Status,
                 PostedAt = j.PostedAt,
                 MinimumEducationLevel = j.MinimumEducationLevel,

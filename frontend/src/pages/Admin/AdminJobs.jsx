@@ -12,20 +12,29 @@ import {
 
 
 const STATUS_TABS = [
-  { label: 'All',      value: ''         },
-  { label: 'Pending',  value: 'Pending'  },
+  { label: 'All', value: '' },
+  { label: 'Pending', value: 'Pending' },
   { label: 'Approved', value: 'Approved' },
   { label: 'Rejected', value: 'Rejected' },
+  { label: 'Closed', value: 'Closed' },
 ]
 
 function StatusBadge({ status }) {
   const map = {
-    0: { label: 'Pending',  cls: 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/40'       },
+    0: { label: 'Pending', cls: 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/40' },
     1: { label: 'Approved', cls: 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/40' },
-    2: { label: 'Rejected', cls: 'bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/40'                   },
-    Pending:  { label: 'Pending',  cls: 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/40'        },
-    Approved: { label: 'Approved', cls: 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/40'},
-    Rejected: { label: 'Rejected', cls: 'bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/40'                   },
+    2: { label: 'Rejected', cls: 'bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/40' },
+    3: {
+      label: 'Closed',
+      cls: 'bg-slate-100 text-slate-600 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+    },
+    Pending: { label: 'Pending', cls: 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/40' },
+    Approved: { label: 'Approved', cls: 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/40' },
+    Rejected: { label: 'Rejected', cls: 'bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/40' },
+    Closed: {
+      label: 'Closed',
+      cls: 'bg-slate-100 text-slate-600 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+    },
   }
   const s = map[status] || { label: String(status), cls: 'bg-slate-100 text-slate-500 border-slate-200' }
   return (
@@ -37,13 +46,13 @@ import JobDetailPanel from './AdminJobDetail'
 
 /* ── placeholder kept for grep ── */
 function _unused() {
-  const [detail,  setDetail]  = useState(null)
+  const [detail, setDetail] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     adminApi.getJobDetail(jobId)
       .then(r => setDetail(r.data))
-      .catch(_err => {})
+      .catch(_err => { })
       .finally(() => setLoading(false))
   }, [jobId])
 
@@ -117,9 +126,9 @@ function _unused() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: 'Applicants',  value: detail.totalApplicants },
-                { label: 'Avg Match',   value: detail.avgMatchScore != null ? `${detail.avgMatchScore}%` : '—' },
-                { label: 'Posted',      value: formatDate(detail.postedAt) },
+                { label: 'Applicants', value: detail.totalApplicants },
+                { label: 'Avg Match', value: detail.avgMatchScore != null ? `${detail.avgMatchScore}%` : '—' },
+                { label: 'Posted', value: formatDate(detail.postedAt) },
               ].map(s => (
                 <div key={s.label} className="text-center p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
                   <div className="font-display text-lg font-bold text-slate-900 dark:text-slate-100">{s.value}</div>
@@ -162,7 +171,7 @@ function _unused() {
                 <button onClick={() => onApprove(detail.jobId)} disabled={acting === detail.jobId}
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-60">
                   {acting === detail.jobId
-                    ? <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>
+                    ? <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70" /></svg>
                     : <><CircleCheck className="w-4 h-4" /> Approve Job</>
                   }
                 </button>
@@ -184,23 +193,24 @@ function _unused() {
 /* ── Main Page ──────────────────────────────────────────── */
 export default function AdminJobs() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [jobs,       setJobs]       = useState([])
-  const [loading,    setLoading]    = useState(true)
-  const [search,     setSearch]     = useState('')
-  const [acting,     setActing]     = useState(null)
-  const [viewJob,    setViewJob]    = useState(null)
-  const [deleting,   setDeleting]   = useState(null)
+  const [jobs, setJobs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [acting, setActing] = useState(null)
+  const [viewJob, setViewJob] = useState(null)
+  const [deleting, setDeleting] = useState(null)
   const { addToast } = useToast()
 
   const statusFilter = searchParams.get('status') || ''
 
   useEffect(() => {
     setLoading(true)
-    adminApi.getJobs(statusFilter ? { status: statusFilter } : {})
+
+    adminApi.getJobs()
       .then(r => setJobs(r.data || []))
-      .catch(_err => addToast('Failed to load jobs', 'error'))
+      .catch(() => addToast('Failed to load jobs', 'error'))
       .finally(() => setLoading(false))
-  }, [statusFilter])
+  }, [])
 
   const approve = async (jobId) => {
     setActing(jobId)
@@ -234,17 +244,38 @@ export default function AdminJobs() {
   }
 
   const filtered = useMemo(() => {
-    if (!search) return jobs
-    const q = search.toLowerCase()
-    return jobs.filter(j =>
-      j.jobTitle?.toLowerCase().includes(q) ||
-      j.companyName?.toLowerCase().includes(q) ||
-      j.location?.toLowerCase().includes(q)
-    )
-  }, [jobs, search])
+    let list = [...jobs];
 
-  const pendingCount = jobs.filter(j => j.status === 'Pending' || j.status === 0).length
-  const counts = { '': jobs.length, Pending: pendingCount, Approved: jobs.filter(j => j.status === 'Approved' || j.status === 1).length, Rejected: jobs.filter(j => j.status === 'Rejected' || j.status === 2).length }
+    // Filter by status
+    if (statusFilter) {
+      list = list.filter(j => String(j.status) === statusFilter);
+    }
+
+    // Filter by search
+    if (search) {
+      const q = search.toLowerCase();
+
+      list = list.filter(j =>
+        j.jobTitle?.toLowerCase().includes(q) ||
+        j.companyName?.toLowerCase().includes(q) ||
+        j.location?.toLowerCase().includes(q)
+      );
+    }
+
+    return list;
+  }, [jobs, search, statusFilter]);
+
+ const pendingCount = jobs.filter(
+  j => j.status === 'Pending' || j.status === 0
+).length
+
+const counts = {
+  '': jobs.length,
+  Pending: jobs.filter(j => j.status === 'Pending' || j.status === 0).length,
+  Approved: jobs.filter(j => j.status === 'Approved' || j.status === 1).length,
+  Rejected: jobs.filter(j => j.status === 'Rejected' || j.status === 2).length,
+  Closed: jobs.filter(j => j.status === 'Closed' || j.status === 3).length,
+}
 
   return (
     <div className="animate-fadeIn space-y-5">
@@ -280,11 +311,10 @@ export default function AdminJobs() {
             {STATUS_TABS.map(t => (
               <button key={t.value}
                 onClick={() => setSearchParams(t.value ? { status: t.value } : {})}
-                className={`px-3.5 py-1.5 text-xs font-medium rounded-lg border transition-all ${
-                  statusFilter === t.value
+                className={`px-3.5 py-1.5 text-xs font-medium rounded-lg border transition-all ${statusFilter === t.value
                     ? 'bg-brand-600 text-white border-brand-600'
                     : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-brand-400'
-                }`}>
+                  }`}>
                 {t.label}
                 <span className={`ml-1.5 text-xs ${statusFilter === t.value ? 'opacity-70' : 'text-slate-400'}`}>
                   ({counts[t.value] ?? 0})

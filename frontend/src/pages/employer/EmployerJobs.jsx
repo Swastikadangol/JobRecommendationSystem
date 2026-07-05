@@ -58,10 +58,15 @@ export default function EmployerJobs() {
 
   useEffect(() => {
     if (!user?.profileId) return
-    employerApi.getMyJobs(user.profileId)
-      .then(r => setJobs(r.data || []))
-      .catch(() => addToast('Failed to load jobs', 'error'))
-      .finally(() => setLoading(false))
+   employerApi.getMyJobs(user.profileId)
+  .then(r => {
+    console.log("Jobs:", r.data);
+    console.log("First job type:", r.data[0]?.jobType);
+
+    setJobs(r.data || []);
+  })
+  .catch(() => addToast('Failed to load jobs', 'error'))
+  .finally(() => setLoading(false))
   }, [user?.profileId])
 
   const handleEdit           = (job) => navigate(`/employer/jobs/${job.jobId}/edit`)
@@ -90,17 +95,28 @@ export default function EmployerJobs() {
         j.jobDescription?.toLowerCase().includes(q)
       )
     }
-    if (filters.jobType !== '')
-      list = list.filter(j =>
-        String(j.jobType) === filters.jobType ||
-        j.jobType === parseInt(filters.jobType)
-      )
-    if (filters.isActive !== '')
-      list = list.filter(j =>
-        filters.isActive === 'true'
-          ? j.isActive !== false && !isExpired(j.deadline)
-          : j.isActive === false  || isExpired(j.deadline)
-      )
+    if (filters.jobType !== '') {
+  list = list.filter(j => j.jobType === filters.jobType);
+}
+   if (filters.isActive !== '') {
+  list = list.filter(j => {
+    switch (filters.isActive) {
+      case 'true': // Active jobs
+        return j.status === 'Approved' && !isExpired(j.deadline);
+
+      case 'expired': // Approved but deadline has passed
+        return j.status === 'Approved' && isExpired(j.deadline);
+
+      case 'rejected': // Rejected by admin
+        return j.status === 'Rejected';
+
+      default:
+        return true;
+    }
+  });
+}
+      console.log("Selected filter:", filters.jobType);
+console.log("Filtered jobs:", list);
     return list.sort((a, b) => new Date(b.postedAt || 0) - new Date(a.postedAt || 0))
   }, [jobs, filters])
 

@@ -6,7 +6,7 @@ import JobCard from '../../components/shared/JobCard'
 import FilterBar from '../../components/shared/FilterBar'
 import { CardSkeleton } from '../../components/shared/Skeleton'
 import { Sparkles, TrendingUp } from 'lucide-react'
-import {  isJobExpired } from '../../utils/helpers'
+import { isJobExpired } from '../../utils/helpers'
 
 const DEFAULT_FILTERS = { search: '', jobType: '', workMode: '', location: '' }
 
@@ -25,11 +25,16 @@ export default function Recommendations() {
       .finally(() => setLoading(false))
   }, [user?.profileId])
 
-  // Only jobs with matchScore > 0, sorted descending
-  const validRecs = useMemo(() =>
-    recs.filter(j => j.matchScore > 0).sort((a, b) => b.matchScore - a.matchScore),
-    [recs]
-  )
+  // then expired jobs at the bottom (also sorted by match score desc within that group).
+  const validRecs = useMemo(() => {
+    const withScore = recs.filter(j => j.matchScore > 0)
+    return [...withScore].sort((a, b) => {
+      const aExpired = isJobExpired(a.deadline)
+      const bExpired = isJobExpired(b.deadline)
+      if (aExpired !== bExpired) return aExpired ? 1 : -1 // active first, expired last
+      return b.matchScore - a.matchScore
+    })
+  }, [recs])
 
   const filtered = useMemo(() => {
     let list = [...validRecs]

@@ -28,7 +28,7 @@ namespace JobRecommendationAPI.Models
         public DateTime? Deadline { get; set; }
         //Pending, Approved, Rejected
         public JobStatus Status { get; set; } = JobStatus.Pending;
-        public bool IsActive { get; set; } = true;
+        public bool IsActive { get; set; } = false;
         public DateTime PostedAt { get; set; } = DateTime.Now;
 
         // Navigation-- one job can have multiple applicants

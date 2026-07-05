@@ -18,12 +18,16 @@ export default function EmployerDashboard() {
   const [loadingJobs, setLoadingJobs] = useState(true)
 
   useEffect(() => {
-    if (!profileId) return
-    employerApi.getMyJobs(profileId)
-      .then(r => setJobs(r.data || []))
-      .catch(_err => {})
-      .finally(() => setLoadingJobs(false))
-  }, [profileId])
+  if (!profileId) return
+
+  employerApi.getMyJobs(profileId)
+    .then(r => {
+      console.log("Jobs data:", r.data)
+      setJobs(r.data || [])
+    })
+    .catch(_err => {})
+    .finally(() => setLoadingJobs(false))
+}, [profileId])
 
   const hour     = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'

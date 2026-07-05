@@ -38,6 +38,7 @@ namespace JobRecommendationAPI.Repositories.Implementation
         public async Task<IEnumerable<Application>> GetByJobAsync(int jobId)
 {
     return await _db.Applications
+        .Include(a => a.Job)
         .Include(a => a.JobSeeker)
             .ThenInclude(js => js!.User)
         .Include(a => a.JobSeeker)
@@ -51,6 +52,7 @@ namespace JobRecommendationAPI.Repositories.Implementation
         public async Task<IEnumerable<Application>> GetAllAsync() =>
             await _db.Applications
             .Include(a => a.Job)
+            .ThenInclude(j => j!.Employer)
             .Include(a => a.JobSeeker)
             .ThenInclude(js => js!.User)
             .OrderByDescending(a => a.AppliedAt)

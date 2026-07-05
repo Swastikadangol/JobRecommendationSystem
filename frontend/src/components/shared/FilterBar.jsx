@@ -6,29 +6,30 @@ import { Search, X } from 'lucide-react'
 
 // Job types
 const JOB_TYPES = [
-  { label: 'Full-time',   value: '0' },
-  { label: 'Part-time',   value: '1' },
-  { label: 'Internship',  value: '2' },
+  { label: 'Full-time',  value: 'FullTime' },
+  { label: 'Part-time',  value: 'PartTime' },
+  { label: 'Internship', value: 'Internship' },
 ]
 
 // Work mode types
 const WORK_MODES = [
-  { label: 'On-site', value: '0' },
-  { label: 'Remote',  value: '1' },
-  { label: 'Hybrid',  value: '2' },
+  { label: 'On-site', value: 'OnSite' },
+  { label: 'Remote', value: 'Remote' },
+  { label: 'Hybrid', value: 'Hybrid' },
 ]
 
 // Employer job statuses
 const EMPLOYER_STATUSES = [
-  { label: 'Active', value: 'true'  },
-  { label: 'Closed', value: 'false' },
+  { label: 'Active', value: 'true' },
+  { label: 'Expired', value: 'expired' },
+  { label: 'Rejected', value: 'rejected' },
 ]
 
 // Admin approval statuses
 const ADMIN_STATUSES = [
-  { label: 'Pending',  value: '0' },
-  { label: 'Approved', value: '1' },
-  { label: 'Rejected', value: '2' },
+  { label: 'Pending', value: 'Pending' },
+  { label: 'Approved', value: 'Approved' },
+  { label: 'Rejected', value: 'Rejected' },
 ]
 
 /* ─────────────────────────────────────────────

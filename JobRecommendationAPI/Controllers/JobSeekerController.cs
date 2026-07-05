@@ -283,12 +283,17 @@ namespace JobRecommendationAPI.Controllers
                 data = response
             });
         }
-
-        [HttpGet("jobs")]
+        [HttpGet("jobs/{id}")]
         public async Task<IActionResult> GetApprovedJobs(
-    [FromQuery] JobType? jobType = null,
-    [FromQuery] WorkMode? workMode = null)
+            int id,
+            [FromQuery] JobType? jobType = null,
+            [FromQuery] WorkMode? workMode = null)
         {
+            var profile = await _jsRepo.GetByIdAsync(id);
+
+            if (profile == null)
+                return NotFound();
+
             var jobs = await _jobRepo.GetAllApprovedAsync(jobType, workMode);
 
             var response = jobs.Select(j => new
@@ -304,7 +309,8 @@ namespace JobRecommendationAPI.Controllers
                 j.Deadline,
                 j.MinimumEducationLevel,
                 j.MinYearsExperience,
-                CompanyName = j.Employer != null ? j.Employer.CompanyName : ""
+                CompanyName = j.Employer != null ? j.Employer.CompanyName : "",
+                MatchScore = _recommender.CalculateMatchScore(profile.Skills, j.RequiredSkills)
             });
 
             return Ok(response);

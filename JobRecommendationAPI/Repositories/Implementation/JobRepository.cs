@@ -14,6 +14,7 @@ namespace JobRecommendationAPI.Repositories.Implementation
         //get a job using its id
         public async Task<Job?> GetByIdAsync(int jobId) =>
             await _db.Jobs
+            .AsNoTracking()
             .Include(j => j.Employer)
             .FirstOrDefaultAsync(j => j.JobId == jobId);
 
@@ -23,7 +24,6 @@ namespace JobRecommendationAPI.Repositories.Implementation
         {
             var query = _db.Jobs
                 .Include(j => j.Employer) // also load the linked Employer data
-                .Where(j => j.IsActive)
                 .AsQueryable();
 
             if (status.HasValue)
@@ -40,7 +40,7 @@ namespace JobRecommendationAPI.Repositories.Implementation
         {
             job.PostedAt = DateTime.UtcNow;
             job.Status = JobStatus.Pending; // default visible job
-            job.IsActive = true;
+            job.IsActive = false;
             _db.Jobs.Add(job);
             await _db.SaveChangesAsync();
             return job;
@@ -85,10 +85,9 @@ namespace JobRecommendationAPI.Repositories.Implementation
 
         //fetch the job posted by the specific employer find using employer id 
         public async Task<IEnumerable<Job>> GetByEmployerAsync(int employerId) =>
-            await _db.Jobs
-            .Where(j => j.EmployerId == employerId && j.IsActive)
-            .OrderByDescending(j => j.PostedAt)
-            .ToListAsync();
+      await _db.Jobs
+          .Where(j => j.EmployerId == employerId && j.IsActive)
+          .ToListAsync();
 
         //search job
         public async Task<IEnumerable<Job>> SearchAsync(string keyword)
@@ -118,6 +117,7 @@ namespace JobRecommendationAPI.Repositories.Implementation
             if (job == null) return false;
 
             job.Status = JobStatus.Approved;
+            job.IsActive = true;
             await _db.SaveChangesAsync();
             return true;
         }
@@ -136,7 +136,7 @@ namespace JobRecommendationAPI.Repositories.Implementation
         // Count only pending jobs (for admin dashboard)
         public async Task<int> CountPendingAsync()
         {
-            return await _db.Jobs.CountAsync(j => j.Status == JobStatus.Pending && j.IsActive);
+            return await _db.Jobs.CountAsync(j => j.Status == JobStatus.Pending);
         }
 
 

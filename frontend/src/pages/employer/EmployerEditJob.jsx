@@ -32,6 +32,32 @@ const normaliseJobType  = v => { if (v == null) return ''; const m = { FullTime:
 const normaliseWorkMode = v => { if (v == null) return ''; const m = { OnSite:'0', Remote:'1', Hybrid:'2' };        return m[v] ?? String(v) }
 const normaliseEdu      = v => { if (v == null) return ''; const m = { HighSchool:'0', Diploma:'1', Bachelor:'2', Master:'3', PhD:'4' }; return m[v] ?? String(v) }
 
+// back into its three separate parts, so editing a job pre-fills all three fields correctly.
+function splitDescription(fullText) {
+  if (!fullText) return { main: '', responsibilities: '', benefits: '' }
+
+  const respMarker = '\n\nResponsibilities:\n'
+  const benMarker   = '\n\nBenefits:\n'
+
+  let main = fullText
+  let responsibilities = ''
+  let benefits = ''
+
+  const benIdx = main.indexOf(benMarker)
+  if (benIdx !== -1) {
+    benefits = main.slice(benIdx + benMarker.length).trim()
+    main = main.slice(0, benIdx)
+  }
+
+  const respIdx = main.indexOf(respMarker)
+  if (respIdx !== -1) {
+    responsibilities = main.slice(respIdx + respMarker.length).trim()
+    main = main.slice(0, respIdx)
+  }
+
+  return { main: main.trim(), responsibilities, benefits }
+}
+
 function OptionCard({ option, selected, onClick }) {
   return (
     <button type="button" onClick={onClick}
@@ -103,9 +129,11 @@ export default function EmployerEditJob() {
 
         // detect if salary was a preset
         const isCustom = job.salaryRange && !SALARY_RANGES.includes(job.salaryRange)
+        // FIX (Issue 4): split the merged jobDescription back into main/responsibilities/benefits
+        const { main, responsibilities, benefits } = splitDescription(job.jobDescription)
         setForm({
           jobTitle:              job.jobTitle               || '',
-          jobDescription:        job.jobDescription         || '',
+          jobDescription:        main,
           jobType:               normaliseJobType(job.jobType),
           workMode:              normaliseWorkMode(job.workMode),
           requiredSkills:        job.requiredSkills         || '',
@@ -114,8 +142,8 @@ export default function EmployerEditJob() {
           deadline:              job.deadline ? job.deadline.split('T')[0] : '',
           minimumEducationLevel: normaliseEdu(job.minimumEducationLevel),
           minYearsExperience:    job.minYearsExperience != null ? String(job.minYearsExperience) : '',
-          responsibilities:      '',
-          benefits:              '',
+          responsibilities:      responsibilities,
+          benefits:              benefits,
           customSalary:          isCustom,
         })
       })
@@ -216,7 +244,7 @@ export default function EmployerEditJob() {
       </div>
 
       {/* Two-column layout */}
-      <div className="flex flex-col lg:flex-row gap-6 items-start">
+      <div className="flex gap-6 items-start">
 
         {/* ── LEFT: form ── */}
         <div className="flex-1 min-w-0 space-y-5">
@@ -355,7 +383,8 @@ export default function EmployerEditJob() {
         </div>
 
         {/* ── RIGHT: sticky sidebar ── */}
-<div className="w-full lg:w-72 flex-shrink-0 space-y-4 lg:sticky lg:top-6">
+        <div className="w-72 flex-shrink-0 space-y-4 sticky top-6">
+
           {/* Live preview */}
           <div className="card">
             <div className="flex items-center gap-2 mb-3">

@@ -36,6 +36,7 @@ builder.Services.AddControllers()
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen();
 
 // CORS - Allow any frontend (React, Angular, etc.)

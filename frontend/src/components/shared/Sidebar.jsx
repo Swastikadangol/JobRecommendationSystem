@@ -64,13 +64,13 @@ export default function Sidebar() {
   const navigate = useNavigate()
   const [open,       setOpen]       = useState(false)
   const [showLogout, setShowLogout] = useState(false)
-  const [similarJobs, setSimilarJobs] = useState([])
+ 
 
   const roleKey  = getRoleKey(user?.role)
   const navItems = NAV_BY_ROLE[roleKey] || NAV_BY_ROLE.JobSeeker
   const name     = user?.fullName || user?.companyName || user?.userName || 'User'
 
-  const handleLogout = () => { logout(); navigate('/login') }
+  const handleLogout = () => { logout(); navigate('/landing') }
 
   return (
     <>

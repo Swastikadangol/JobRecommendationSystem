@@ -5,7 +5,7 @@ import JobCard from '../../components/shared/JobCard'
 import FilterBar from '../../components/shared/FilterBar'
 import { CardSkeleton } from '../../components/shared/Skeleton'
 import { Briefcase, Sparkles } from 'lucide-react'
-import { parseSkills } from '../../utils/helpers'
+import { parseSkills, isJobExpired } from '../../utils/helpers'
 
 const DEFAULT_FILTERS = { search: '', jobType: '', workMode: '', location: '' }
 
@@ -25,14 +25,14 @@ export default function BrowseJobs() {
   useEffect(() => {
     if (!user?.profileId) return
     Promise.all([
-      jobSeekerApi.getApprovedJobs(),
+      jobSeekerApi.getApprovedJobs(user.profileId),
       jobSeekerApi.getProfile(user.profileId),
     ])
       .then(([jobsRes, profileRes]) => {
         setJobs(jobsRes.data || [])
         setProfile(profileRes.data)
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false))
   }, [user?.profileId])
 
@@ -54,18 +54,24 @@ export default function BrowseJobs() {
     if (filters.workMode !== '') list = list.filter(j => String(j.workMode) === filters.workMode || j.workMode === parseInt(filters.workMode))
     if (filters.location) list = list.filter(j => j.location?.toLowerCase().includes(filters.location.toLowerCase()))
 
-    // Relevant first, then by date
+    // Within each group: relevance (skill match) first, then most recent.
     list.sort((a, b) => {
+      const aExpired = isJobExpired(a.deadline)
+      const bExpired = isJobExpired(b.deadline)
+      if (aExpired !== bExpired) return aExpired ? 1 : -1// active first, expired last
+
       const sa = relevanceScore(a, userSkills)
       const sb = relevanceScore(b, userSkills)
       if (sb !== sa) return sb - sa
+
       return new Date(b.postedAt || 0) - new Date(a.postedAt || 0)
     })
 
     return list
   }, [jobs, filters, userSkills])
 
-  const relevantCount = filtered.filter(j => relevanceScore(j, userSkills) > 0).length
+  const activeJobs = filtered.filter(j => !isJobExpired(j.deadline))
+  const relevantCount = activeJobs.filter(j => relevanceScore(j, userSkills) > 0).length
 
   return (
     <div className="animate-fadeIn space-y-5">
@@ -109,7 +115,7 @@ export default function BrowseJobs() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-7">
           {filtered.map(job => (
-            <JobCard key={job.jobId} job={job} role="JobSeeker" />
+            <JobCard key={job.jobId} job={job} role="JobSeeker" showMatch={true} />
           ))}
         </div>
       )}

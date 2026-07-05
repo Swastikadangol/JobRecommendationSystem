@@ -47,6 +47,7 @@ export default function Login() {
     setServerError('') // clear only right before the new request fires
     try {
       const { data } = await authApi.login(form)
+      console.log('LOGIN RESPONSE:', data)
       login(data)
       addToast('Welcome back! 👋', 'success')
       if      (data.role === 0 || data.role === 'JobSeeker') navigate('/dashboard')
