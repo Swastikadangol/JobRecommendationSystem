@@ -136,24 +136,24 @@ export default function JobDetail() {
   const [applied,     setApplied]     = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
-  useEffect(() => {
-    jobSeekerApi.getApprovedJobs()
-      .then(r => {
-        const found = (r.data || []).find(j => j.jobId === parseInt(id))
-        setJob(found || null)
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false))
+ useEffect(() => {
+  if (!user?.profileId) return;
 
-    if (user?.profileId) {
-      jobSeekerApi.getApplications(user.profileId)
-        .then(r => {
-          const apps = r.data?.data || r.data || []
-          setApplied(apps.some(a => a.jobId === parseInt(id)))
-        })
-        .catch(() => {})
-    }
-  }, [id, user?.profileId])
+  jobSeekerApi.getApprovedJobs(user.profileId)
+    .then(r => {
+      const found = (r.data || []).find(j => j.jobId === Number(id));
+      setJob(found || null);
+    })
+    .catch(() => {})
+    .finally(() => setLoading(false));
+
+  jobSeekerApi.getApplications(user.profileId)
+    .then(r => {
+      const apps = r.data?.data || r.data || [];
+      setApplied(apps.some(a => a.jobId === Number(id)));
+    })
+    .catch(() => {});
+}, [id, user?.profileId]);
 
   const handleApply = async () => {
     setShowConfirm(false)

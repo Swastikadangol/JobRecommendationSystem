@@ -46,24 +46,82 @@ namespace JobRecommendationAPI.Services
             return Math.Round(dotProduct / (magU * magJ) * 100, 2);
         }
 
-        // Returns jobs sorted by match score with optional enum filters
+        // final recommendation system
+        //weighted scoring system
+        // WEIGHTS (importance level):
+        // Skills      = 60%  (most important)
+        // Experience  = 15%
+        // Education   = 10%
+        // JobType     = 10%
+        // WorkMode    = 5%
         public List<(Job job, double score)> GetRecommendations(
             string? seekerSkills,
+            int seekerExperience,
+            EducationLevel seekerEducation,
+            JobType seekerJobType,
+            WorkMode seekerWorkMode,
             IEnumerable<Job> allJobs,
             JobType? filterJobType = null,
             WorkMode? filterWorkMode = null)
         {
             var scored = allJobs
-                .Select(j => (job: j, score: CalculateMatchScore(seekerSkills, j.RequiredSkills)))
+                .Select(job =>
+                {
+                    // 1. SKILL SCORE
+                    double skillScore = CalculateMatchScore(seekerSkills, job.RequiredSkills);
+
+                    // 2. EXPERIENCE SCORE
+                    double experienceScore =
+                        seekerExperience >= job.MinYearsExperience
+                            ? 100
+                            : (job.MinYearsExperience == 0
+                                ? 100
+                                : (seekerExperience / (double)job.MinYearsExperience) * 100);
+
+                    experienceScore = Math.Min(experienceScore, 100);
+
+                    // 3. EDUCATION SCORE
+                    // Higher enum = better qualification
+                    double educationScore =
+                        seekerEducation >= job.MinimumEducationLevel
+                            ? 100
+                            : 50;
+
+                    // 4. JOB TYPE SCORE
+                    double jobTypeScore =
+                        seekerJobType == job.JobType
+                            ? 100
+                            : 60;
+
+                    // 5. WORK MODE SCORE
+                    double workModeScore =
+                        seekerWorkMode == job.WorkMode
+                            ? 100
+                            : 60;
+
+                    // FINAL WEIGHTED SCORE
+                    double finalScore =
+                        (skillScore * 0.60) +
+                        (experienceScore * 0.15) +
+                        (educationScore * 0.10) +
+                        (jobTypeScore * 0.10) +
+                        (workModeScore * 0.05);
+
+                    return (job, score: Math.Round(finalScore, 2));
+                })
                 .ToList();
 
+            // STEP 4: APPLY FILTERS
             if (filterJobType.HasValue)
                 scored = scored.Where(x => x.job.JobType == filterJobType.Value).ToList();
 
             if (filterWorkMode.HasValue)
                 scored = scored.Where(x => x.job.WorkMode == filterWorkMode.Value).ToList();
 
-            return scored.OrderByDescending(x => x.score).ToList();
+            // STEP 5: SORT BY BEST MATCH
+            return scored
+                .OrderByDescending(x => x.score)
+                .ToList();
         }
     }
 }

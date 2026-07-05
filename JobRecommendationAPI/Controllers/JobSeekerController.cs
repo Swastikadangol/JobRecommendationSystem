@@ -196,17 +196,34 @@ namespace JobRecommendationAPI.Controllers
         // ==================== JOB RECOMMENDATIONS ====================
 
         [HttpGet("recommendations/{id}")]
-        public async Task<IActionResult> GetRecommendations(int id,
-            [FromQuery] JobType? jobType = null,
-            [FromQuery] WorkMode? workMode = null)
+        public async Task<IActionResult> GetRecommendations(
+     int id,
+     [FromQuery] JobType? jobType = null,
+     [FromQuery] WorkMode? workMode = null)
         {
+            // 1. Get job seeker profile
             var profile = await _jsRepo.GetByIdAsync(id);
+
             if (profile == null)
                 return NotFound(new { message = "Profile not found" });
 
+            // 2. Get approved jobs (pre-filtered from DB)
             var approvedJobs = await _jobRepo.GetAllApprovedAsync(jobType, workMode);
-            var results = _recommender.GetRecommendations(profile.Skills, approvedJobs, jobType, workMode);
+            var experienceYears = CalculateTotalExperienceYears(profile.Experiences);
+            var education = profile.EducationLevel ?? EducationLevel.HighSchool;
+            var results = _recommender.GetRecommendations(
+                profile.Skills,
+                experienceYears,
+                education,
+                 profile.PreferredJobType ?? JobType.FullTime,
+                profile.PreferredWorkMode ?? WorkMode.OnSite,
+                approvedJobs,
+                //for filter
+                jobType,
+                workMode
+            );
 
+            // 4. Shape response
             var response = results.Select(r => new
             {
                 r.job.JobId,
@@ -314,6 +331,25 @@ namespace JobRecommendationAPI.Controllers
             });
 
             return Ok(response);
+        }
+        private int CalculateTotalExperienceYears(ICollection<Experience> experiences)
+        {
+            if (experiences == null || !experiences.Any())
+                return 0;
+
+            double totalMonths = 0;
+
+            foreach (var exp in experiences)
+            {
+                var endDate = exp.EndDate ?? DateTime.Now;
+
+                var months = ((endDate.Year - exp.StartDate.Year) * 12)
+                             + (endDate.Month - exp.StartDate.Month);
+
+                totalMonths += months;
+            }
+
+            return (int)(totalMonths / 12);
         }
 
     }

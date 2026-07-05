@@ -67,6 +67,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddHttpClient<GeminiService>();
+
+builder.Services.AddScoped<GeminiService>();
 var app = builder.Build();
 
 // Swagger UI

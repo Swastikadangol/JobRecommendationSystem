@@ -60,10 +60,10 @@ export default function Register() {
       e.username = 'Username cannot contain spaces'
     }
  
-    // Full name
-    if (!form.fullName.trim()) {
-      e.fullName = role === '0' ? 'Full name is required' : 'Contact name is required'
-    }
+    // // Full name
+    // if (!form.fullName.trim()) {
+    //   e.fullName = role === '0' ? 'Full name is required' : 'Contact name is required'
+    // }
  
     // Email
     if (!form.email.trim()) {
@@ -197,7 +197,7 @@ export default function Register() {
           <form onSubmit={handleSubmit} noValidate className="space-y-3">
  
             {/* Username + Full Name */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className=" gap-3">
               <div>
                 <label className="label">Username</label>
                 <input
@@ -208,7 +208,7 @@ export default function Register() {
                 />
                 <FieldError msg={errors.username} />
               </div>
-              <div>
+              {/* <div>
                 <label className="label">{role === '0' ? 'Full Name' : 'Contact'}</label>
                 <input
                   type="text" placeholder="John Doe"
@@ -217,7 +217,7 @@ export default function Register() {
                   className={`input ${errors.fullName ? 'border-red-400 dark:border-red-600' : ''}`}
                 />
                 <FieldError msg={errors.fullName} />
-              </div>
+              </div> */}
             </div>
  
             {/* Email */}

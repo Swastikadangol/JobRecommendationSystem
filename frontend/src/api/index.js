@@ -65,6 +65,12 @@ export const employerApi = {
     { headers: { 'Content-Type': 'application/json' } }
   ),
 }
+// ───── AI ─────
+export const aiApi = {
+  generateJob: (jobTitle) =>
+    api.post('/api/ai/generate-job', { jobTitle }),
+}
+
 
 // ───── ADMIN ─────
 export const adminApi = {

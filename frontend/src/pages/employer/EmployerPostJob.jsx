@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { employerApi } from '../../api'
+import { employerApi, aiApi } from '../../api'
 import { useToast } from '../../context/ToastContext'
 import {
   CirclePlus, Save, X, Briefcase, MapPin,
@@ -108,6 +108,7 @@ export default function EmployerPostJob() {
   const [form, setForm] = useState(INITIAL)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [generating, setGenerating] = useState(false)
 
   const set = (k, v) => {
     setForm(f => ({ ...f, [k]: v }))
@@ -157,6 +158,51 @@ export default function EmployerPostJob() {
       setSaving(false)
     }
   }
+  const generateWithAI = async () => {
+  if (!form.jobTitle.trim()) {
+    addToast('Please enter a job title first.', 'error')
+    return
+  }
+
+  try {
+    setGenerating(true)
+
+    const { data } = await aiApi.generateJob(form.jobTitle)
+
+    setForm(prev => ({
+      ...prev,
+
+      jobDescription: data.description,
+
+      responsibilities:
+        data.responsibilities?.join('\n') ?? '',
+
+      requiredSkills:
+        data.requiredSkills?.join(', ') ?? '',
+
+      benefits:
+        data.perksAndBenefits?.join('\n') ??
+        data.benefits?.join('\n') ??
+        '',
+
+      minimumEducationLevel:
+        data.minimumEducationLevel ?? prev.minimumEducationLevel,
+
+      minYearsExperience:
+        data.minYearsExperience?.toString() ??
+        prev.minYearsExperience
+    }))
+
+    addToast('Job details generated successfully!', 'success')
+  }
+  catch (err) {
+    console.error(err)
+    addToast('Failed to generate job details.', 'error')
+  }
+  finally {
+    setGenerating(false)
+  }
+}
 
   const today = new Date().toISOString().split('T')[0]
   const skillsArray = form.requiredSkills.split(',').map(s => s.trim()).filter(Boolean)
@@ -197,9 +243,27 @@ export default function EmployerPostJob() {
           {/* Basic Info */}
           <Section icon={Briefcase} title="Basic Information" subtitle="Job title and description">
             <Field label="Job Title" required error={errors.jobTitle}>
-              <input type="text" className="input" placeholder="e.g. Senior Frontend Developer"
-                value={form.jobTitle} onChange={e => set('jobTitle', e.target.value)} />
-            </Field>
+    <div className="flex gap-2">
+
+        <input
+            type="text"
+            className="input flex-1"
+            placeholder="e.g. Senior Frontend Developer"
+            value={form.jobTitle}
+            onChange={e => set('jobTitle', e.target.value)}
+        />
+
+        <button
+            type="button"
+            onClick={generateWithAI}
+            disabled={generating}
+            className="btn-outline whitespace-nowrap"
+        >
+            {generating ? "Generating..." : "✨ AI Generate"}
+        </button>
+
+    </div>
+</Field>
             <Field label="Job Description" required error={errors.jobDescription}
               hint="Describe the role, day-to-day tasks and what you're looking for.">
               <textarea rows={5} className="input resize-none"
