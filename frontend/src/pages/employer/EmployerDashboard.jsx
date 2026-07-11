@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { employerApi } from '../../api'
 import JobCard from '../../components/shared/JobCard'
@@ -11,6 +11,7 @@ import {
 
 export default function EmployerDashboard() {
   const { user }   = useAuth()
+  const navigate   = useNavigate()
   const profileId  = user?.profileId
   const firstName  = (user?.companyName || user?.userName || 'there').split(' ')[0]
 
@@ -142,8 +143,8 @@ export default function EmployerDashboard() {
                 key={job.jobId}
                 job={job}
                 role="Employer"
-                onEdit={j => window.location.href = `/employer/jobs/${j.jobId}/edit`}
-                onViewCandidates={j => window.location.href = `/employer/jobs/${j.jobId}/applicants`}
+                onEdit={j => navigate(`/employer/jobs/${j.jobId}/edit`)}
+                onViewCandidates={j => navigate('/employer/candidates', { state: { selectedJobId: j.jobId } })}
               />
             ))
           )}

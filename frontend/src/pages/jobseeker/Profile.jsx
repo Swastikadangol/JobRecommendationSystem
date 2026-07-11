@@ -25,6 +25,30 @@ const WORK_MODE_OPTS = [
   { value: '1', label: 'Remote'   }, { value: '2', label: 'Hybrid'  },
 ]
 
+/* ── Enum name → numeric value maps ─────────────────────────
+   Some APIs serialize enums as their numeric value (0, 1, 2…),
+   others serialize them as the enum member name ("Bachelor",
+   "FullTime", "Hybrid"). These maps let us accept either shape
+   coming back from the server and still match it to the right
+   <option value="..."> in the selects below. */
+const EDUCATION_NAME_TO_VALUE = {
+  HighSchool: '0', Diploma: '1', Bachelor: '2', Master: '3', PhD: '4',
+}
+const JOB_TYPE_NAME_TO_VALUE = {
+  FullTime: '0', PartTime: '1', Internship: '2',
+}
+const WORK_MODE_NAME_TO_VALUE = {
+  OnSite: '0', Remote: '1', Hybrid: '2',
+}
+
+function normalizeEnumValue(raw, nameToValue) {
+  if (raw === null || raw === undefined) return ''
+  if (typeof raw === 'number') return String(raw)
+  const asStr = String(raw)
+  if (/^\d+$/.test(asStr)) return asStr        // already a numeric string, e.g. "2"
+  return nameToValue[asStr] ?? ''              // enum name, e.g. "Bachelor" -> "2"
+}
+
 /* ── Experience Modal ──────────────────────────────────── */
 function ExperienceModal({ exp, onSave, onClose }) {
   const [form, setForm] = useState({
@@ -115,9 +139,9 @@ function EditProfileModal({ profile, onSave, onClose, saving }) {
     fullName:          p?.fullName          ?? '',
     phone:             p?.phone             ?? '',
     skills:            p?.skills            ?? '',
-    educationLevel:    p?.educationLevel    != null ? String(p.educationLevel)    : '',
-    preferredJobType:  p?.preferredJobType  != null ? String(p.preferredJobType)  : '',
-    preferredWorkMode: p?.preferredWorkMode != null ? String(p.preferredWorkMode) : '',
+    educationLevel:    normalizeEnumValue(p?.educationLevel,    EDUCATION_NAME_TO_VALUE),
+    preferredJobType:  normalizeEnumValue(p?.preferredJobType,  JOB_TYPE_NAME_TO_VALUE),
+    preferredWorkMode: normalizeEnumValue(p?.preferredWorkMode, WORK_MODE_NAME_TO_VALUE),
   })
 
   const [form, setForm] = useState(() => buildForm(profile))

@@ -47,31 +47,37 @@ function DeleteModal({ job, onConfirm, onCancel }) {
 
 /* ── Main Page ──────────────────────────────────────────── */
 export default function EmployerJobs() {
-  const { user }     = useAuth()
-  const navigate     = useNavigate()
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const { addToast } = useToast()
 
-  const [jobs,    setJobs]    = useState([])
+  const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [deleting, setDeleting] = useState(null) // job pending delete confirm
 
   useEffect(() => {
     if (!user?.profileId) return
-   employerApi.getMyJobs(user.profileId)
-  .then(r => {
-    console.log("Jobs:", r.data);
-    console.log("First job type:", r.data[0]?.jobType);
+    employerApi.getMyJobs(user.profileId)
+      .then(r => {
+        console.log("Jobs:", r.data);
+        console.log("First job type:", r.data[0]?.jobType);
 
-    setJobs(r.data || []);
-  })
-  .catch(() => addToast('Failed to load jobs', 'error'))
-  .finally(() => setLoading(false))
+        setJobs(r.data || []);
+      })
+      .catch(() => addToast('Failed to load jobs', 'error'))
+      .finally(() => setLoading(false))
   }, [user?.profileId])
 
-  const handleEdit           = (job) => navigate(`/employer/jobs/${job.jobId}/edit`)
-  const handleViewCandidates = (job) => navigate(`/employer/jobs/${job.jobId}/applicants`)
-  const handleClose          = (job) => setDeleting(job)
+  const handleEdit = (job) => navigate(`/employer/jobs/${job.jobId}/edit`)
+  const handleViewCandidates = (job) => {
+    navigate('/employer/candidates', {
+      state: {
+        selectedJobId: job.jobId
+      }
+    })
+  }
+  const handleClose = (job) => setDeleting(job)
 
   const confirmDelete = async () => {
     try {
@@ -96,27 +102,27 @@ export default function EmployerJobs() {
       )
     }
     if (filters.jobType !== '') {
-  list = list.filter(j => j.jobType === filters.jobType);
-}
-   if (filters.isActive !== '') {
-  list = list.filter(j => {
-    switch (filters.isActive) {
-      case 'true': // Active jobs
-        return j.status === 'Approved' && !isExpired(j.deadline);
-
-      case 'expired': // Approved but deadline has passed
-        return j.status === 'Approved' && isExpired(j.deadline);
-
-      case 'rejected': // Rejected by admin
-        return j.status === 'Rejected';
-
-      default:
-        return true;
+      list = list.filter(j => j.jobType === filters.jobType);
     }
-  });
-}
-      console.log("Selected filter:", filters.jobType);
-console.log("Filtered jobs:", list);
+    if (filters.isActive !== '') {
+      list = list.filter(j => {
+        switch (filters.isActive) {
+          case 'true': // Active jobs
+            return j.status === 'Approved' && !isExpired(j.deadline);
+
+          case 'expired': // Approved but deadline has passed
+            return j.status === 'Approved' && isExpired(j.deadline);
+
+          case 'rejected': // Rejected by admin
+            return j.status === 'Rejected';
+
+          default:
+            return true;
+        }
+      });
+    }
+    console.log("Selected filter:", filters.jobType);
+    console.log("Filtered jobs:", list);
     return list.sort((a, b) => new Date(b.postedAt || 0) - new Date(a.postedAt || 0))
   }, [jobs, filters])
 

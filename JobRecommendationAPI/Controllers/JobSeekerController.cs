@@ -217,6 +217,7 @@ namespace JobRecommendationAPI.Controllers
                 education,
                  profile.PreferredJobType ?? JobType.FullTime,
                 profile.PreferredWorkMode ?? WorkMode.OnSite,
+
                 approvedJobs,
                 //for filter
                 jobType,
@@ -226,16 +227,21 @@ namespace JobRecommendationAPI.Controllers
             // 4. Shape response
             var response = results.Select(r => new
             {
-                r.job.JobId,
-                r.job.JobTitle,
-                r.job.JobType,
-                r.job.WorkMode,
-                r.job.Location,
-                r.job.SalaryRange,
-                r.job.RequiredSkills,
-                r.job.Deadline,
-                CompanyName = r.job.Employer?.CompanyName,
-                MatchScore = r.score
+                r.Job.JobId,
+                r.Job.JobTitle,
+                r.Job.JobType,
+                r.Job.WorkMode,
+                r.Job.Location,
+                r.Job.SalaryRange,
+                r.Job.RequiredSkills,
+                r.Job.Deadline,
+                CompanyName = r.Job.Employer?.CompanyName,
+
+                MatchScore = r.Score,
+
+                MatchedSkills = r.MatchedSkills,
+                MissingSkills = r.MissingSkills,
+                Reason = r.Reason
             });
 
             return Ok(response);
@@ -259,8 +265,13 @@ namespace JobRecommendationAPI.Controllers
             if (alreadyApplied)
                 return BadRequest(new { message = "You have already applied for this job" });
 
-            var matchScore = _recommender.CalculateMatchScore(profile.Skills, job.RequiredSkills);
+            var approvedJobs = await _jobRepo.GetAllApprovedAsync();
 
+            var matchScore = _recommender.CalculateMatchScore(
+                profile.Skills,
+                job.RequiredSkills,
+                approvedJobs
+            );
             var application = new Application
             {
                 JobId = dto.JobId,
@@ -327,7 +338,7 @@ namespace JobRecommendationAPI.Controllers
                 j.MinimumEducationLevel,
                 j.MinYearsExperience,
                 CompanyName = j.Employer != null ? j.Employer.CompanyName : "",
-                MatchScore = _recommender.CalculateMatchScore(profile.Skills, j.RequiredSkills)
+                MatchScore = _recommender.CalculateMatchScore(profile.Skills, j.RequiredSkills,jobs)
             });
 
             return Ok(response);

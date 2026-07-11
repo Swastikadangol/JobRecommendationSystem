@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { jobSeekerApi } from '../../api'
@@ -14,6 +14,7 @@ import {
   AlertTriangle, Ban, Timer, Wifi, Monitor, Blend,
   TrendingUp, Star, ChevronRight, X, Users
 } from 'lucide-react'
+
 
 /* ── Badge helpers ──────────────────────────────────────── */
 const workModeMeta = {
@@ -123,12 +124,92 @@ function ApplyDialog({ job, onConfirm, onCancel, applying }) {
   )
 }
 
+/* ── Match Analysis card (its own component so it can live in its own column) ── */
+function MatchAnalysisCard({ recommendation }) {
+  return (
+    <div className="card">
+      <div className="flex items-center gap-2 mb-4">
+        <Star className="w-4 h-4 text-amber-500" />
+        <h2 className="font-display font-semibold text-slate-900 dark:text-slate-100">
+          Match Analysis
+        </h2>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <p className="text-xs text-slate-500 mb-1">Match Score</p>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 bg-slate-200 rounded-full h-2">
+              <div
+                className="bg-emerald-500 h-2 rounded-full"
+                style={{ width: `${recommendation.matchScore || 0}%` }}
+              />
+            </div>
+            <span className="font-semibold text-sm">
+              {recommendation.matchScore || 0}%
+            </span>
+          </div>
+        </div>
+
+        {recommendation.matchedSkills?.length > 0 && (
+          <div>
+            <p className="text-xs font-medium text-emerald-600 mb-2">
+              Matching Skills
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {recommendation.matchedSkills.map(skill => (
+                <span
+                  key={skill}
+                  className="px-2 py-1 rounded-lg text-xs bg-emerald-100 text-emerald-700"
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {recommendation.missingSkills?.length > 0 && (
+          <div>
+            <p className="text-xs font-medium text-red-600 mb-2">
+              Missing Skills
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {recommendation.missingSkills.map(skill => (
+                <span
+                  key={skill}
+                  className="px-2 py-1 rounded-lg text-xs bg-red-100 text-red-700"
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {recommendation.reason && (
+          <div>
+            <p className="text-xs font-medium text-slate-500 mb-1">
+              Why Recommended
+            </p>
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              {recommendation.reason}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 /* ── Main Page ──────────────────────────────────────────── */
 export default function JobDetail() {
   const { id }       = useParams()
   const { user }     = useAuth()
   const { addToast } = useToast()
   const navigate     = useNavigate()
+  const location = useLocation()
+  const recommendation = location.state
 
   const [job,         setJob]         = useState(null)
   const [loading,     setLoading]     = useState(true)
@@ -322,11 +403,18 @@ export default function JobDetail() {
         </div>
       </div>
 
-      {/* ── Two-column body ── */}
-      <div className="grid md:grid-cols-3 gap-5">
+      {/*
+        ── Body grid ──────────────────────────────────────────
+        md:  2-col main content | 1-col sidebar (extra column wraps below)
+        xl:  2-col main content | 1-col sidebar (Apply/Job Details/Company)
+             | 1-col right column (Match Analysis + Tip)
+        This puts Match Analysis and the Tip card in their own column
+        to the right of Job Details on wide screens.
+      */}
+      <div className="grid md:grid-cols-3 xl:grid-cols-4 gap-5 items-start">
 
         {/* ── LEFT: content ── */}
-        <div className="md:col-span-2 space-y-5">
+        <div className="md:col-span-2 xl:col-span-2 space-y-5">
 
           {/* About the role */}
           {desc.main.length > 0 && (
@@ -432,7 +520,7 @@ export default function JobDetail() {
           )}
         </div>
 
-        {/* ── RIGHT: sidebar ── */}
+        {/* ── MIDDLE: sidebar (job details, company) ── */}
         <div className="space-y-5">
 
           {/* Apply CTA card */}
@@ -512,6 +600,12 @@ export default function JobDetail() {
             </div>
           )}
 
+        </div>
+
+        {/* ── RIGHT: Match Analysis + Tip, own column on xl screens ── */}
+        <div className="space-y-5 xl:col-span-1 md:col-span-3">
+          {recommendation && <MatchAnalysisCard recommendation={recommendation} />}
+
           {/* Tip */}
           <div className="card bg-slate-50 dark:bg-slate-800/50 border-dashed border-slate-200 dark:border-slate-700">
             <div className="flex items-start gap-2.5">
@@ -525,6 +619,7 @@ export default function JobDetail() {
             </div>
           </div>
         </div>
+
       </div>
 
       {/* Apply confirm dialog */}

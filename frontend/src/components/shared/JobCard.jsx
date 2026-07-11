@@ -44,9 +44,22 @@ function JobSeekerCard({ job, showMatch }) {
 
   return (
     <div
-      className={`card-hover flex flex-col gap-3 animate-fadeIn ${expired ? 'opacity-60' : ''}`}
-      onClick={() => navigate(`/jobs/${job.jobId}`)}
-    >
+  className={`card-hover flex flex-col gap-3 animate-fadeIn ${expired ? 'opacity-60' : ''}`}
+  onClick={() =>
+    navigate(`/jobs/${job.jobId}`, {
+      state: {
+        matchScore: job.matchScore,
+        matchedSkills: job.matchedSkills,
+        missingSkills: job.missingSkills,
+        reason: job.reason,
+        experienceMatched: job.experienceMatched,
+        educationMatched: job.educationMatched,
+        jobTypeMatched: job.jobTypeMatched,
+        workModeMatched: job.workModeMatched
+      }
+    })
+  }
+>
       {/* Header */}
       <div className="flex items-start gap-3">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5

@@ -204,7 +204,7 @@ namespace JobRecommendationAPI.Controllers
         public async Task<IActionResult> GetApplicants(int jobId)
         {
             var apps = await _appRepo.GetByJobAsync(jobId);
-
+            var approvedJobs = await _jobRepo.GetAllApprovedAsync();
             var response = apps.Select(a => new ApplicationResponseDto
             {
                 ApplicationId = a.ApplicationId,
@@ -223,7 +223,8 @@ namespace JobRecommendationAPI.Controllers
 
                 MatchScore = _recommender.CalculateMatchScore(
                     a.JobSeeker?.Skills,
-                    a.Job?.RequiredSkills
+                    a.Job?.RequiredSkills ?? "",
+                    approvedJobs
                 ),
 
                 AppliedAt = a.AppliedAt,

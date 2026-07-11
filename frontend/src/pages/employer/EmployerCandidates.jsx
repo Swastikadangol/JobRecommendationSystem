@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { employerApi } from '../../api'
 import { useToast } from '../../context/ToastContext'
@@ -10,44 +10,43 @@ import {
   TrendingUp, Calendar, CirclePlus, Eye, Mail,
   Phone, BookOpen, Star, Building2, Clock, MapPin
 } from 'lucide-react'
-
 /* ─────────────────────────────────────────────────────────
    Backend statuses: Applied, Reviewed, Shortlisted, Rejected, Accepted
    ───────────────────────────────────────────────────────── */
 const STATUS_TABS = [
-  { label:'All',         value:null           },
-  { label:'Applied',     value:'Applied'      },
-  { label:'Reviewed',    value:'Reviewed'     },
-  { label:'Shortlisted', value:'Shortlisted'  },
-  { label:'Rejected',    value:'Rejected'     },
-  { label:'Accepted',    value:'Accepted'     },
+  { label: 'All', value: null },
+  { label: 'Applied', value: 'Applied' },
+  { label: 'Reviewed', value: 'Reviewed' },
+  { label: 'Shortlisted', value: 'Shortlisted' },
+  { label: 'Rejected', value: 'Rejected' },
+  { label: 'Accepted', value: 'Accepted' },
 ]
 const STATUS_OPTIONS = [
-  { value:'Reviewed',    label:'Mark Reviewed' },
-  { value:'Shortlisted', label:'Shortlist'      },
-  { value:'Rejected',    label:'Reject'         },
-  { value:'Accepted',    label:'Accept'         },
+  { value: 'Reviewed', label: 'Mark Reviewed' },
+  { value: 'Shortlisted', label: 'Shortlist' },
+  { value: 'Rejected', label: 'Reject' },
+  { value: 'Accepted', label: 'Accept' },
 ]
 const STATUS_CLS = {
-  Applied:     'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/40',
-  Reviewed:    'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800/40',
+  Applied: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/40',
+  Reviewed: 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800/40',
   Shortlisted: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800/40',
-  Rejected:    'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/40',
-  Accepted:    'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40',
+  Rejected: 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/40',
+  Accepted: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40',
 }
 
 /* Normalize status — backend may return string or int */
 const toStr = (s) => {
   if (!s && s !== 0) return 'Applied'
   if (typeof s === 'string' && isNaN(Number(s))) return s
-  return { 0:'Applied',1:'Reviewed',2:'Shortlisted',3:'Rejected',4:'Accepted' }[Number(s)] ?? String(s)
+  return { 0: 'Applied', 1: 'Reviewed', 2: 'Shortlisted', 3: 'Rejected', 4: 'Accepted' }[Number(s)] ?? String(s)
 }
 
 /* Avatar colors */
 const GRADS = [
-  'from-violet-500 to-violet-600','from-sky-500 to-sky-600',
-  'from-emerald-500 to-emerald-600','from-amber-500 to-amber-600',
-  'from-rose-500 to-rose-600','from-indigo-500 to-indigo-600',
+  'from-violet-500 to-violet-600', 'from-sky-500 to-sky-600',
+  'from-emerald-500 to-emerald-600', 'from-amber-500 to-amber-600',
+  'from-rose-500 to-rose-600', 'from-indigo-500 to-indigo-600',
 ]
 const JOB_COLORS = [
   'bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400',
@@ -56,30 +55,30 @@ const JOB_COLORS = [
   'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400',
   'bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400',
 ]
-const grad     = (n='') => GRADS[(n.charCodeAt(0)||0) % GRADS.length]
-const jobColor = (n='') => JOB_COLORS[(n.charCodeAt(0)||0) % JOB_COLORS.length]
+const grad = (n = '') => GRADS[(n.charCodeAt(0) || 0) % GRADS.length]
+const jobColor = (n = '') => JOB_COLORS[(n.charCodeAt(0) || 0) % JOB_COLORS.length]
 
 /* ── Duration helper ────────────────────────────────────── */
 function duration(start, end) {
   const s = new Date(start)
   const e = end ? new Date(end) : new Date()
-  const months = (e.getFullYear()-s.getFullYear())*12 + (e.getMonth()-s.getMonth())
+  const months = (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth())
   if (months < 1) return 'Less than a month'
-  if (months < 12) return `${months} mo${months>1?'s':''}`
-  const y = Math.floor(months/12), m = months%12
-  return `${y}y${m>0?` ${m}mo`:''}`
+  if (months < 12) return `${months} mo${months > 1 ? 's' : ''}`
+  const y = Math.floor(months / 12), m = months % 12
+  return `${y}y${m > 0 ? ` ${m}mo` : ''}`
 }
 
 /* ══════════════════════════════════════════════════════════
    CANDIDATE DETAIL MODAL
 ══════════════════════════════════════════════════════════ */
 function CandidateDetailModal({ app, onClose, onStatusChange, updating }) {
-  const name   = app.applicantName || app.fullName || 'Applicant'
-  const g      = grad(name)
+  const name = app.applicantName || app.fullName || 'Applicant'
+  const g = grad(name)
   const status = toStr(app.applicationStatus)
-  const cls    = STATUS_CLS[status] || 'bg-slate-100 text-slate-500 border-slate-200'
-  const skills = (app.applicantSkills || app.skills || '').split(',').map(s=>s.trim()).filter(Boolean)
-  const exps   = app.experiences || []
+  const cls = STATUS_CLS[status] || 'bg-slate-100 text-slate-500 border-slate-200'
+  const skills = (app.applicantSkills || app.skills || '').split(',').map(s => s.trim()).filter(Boolean)
+  const exps = app.experiences || []
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -89,16 +88,18 @@ function CandidateDetailModal({ app, onClose, onStatusChange, updating }) {
   return createPortal(
     <div
       onClick={onClose}
-      style={{ position:'fixed',inset:0,width:'100vw',height:'100vh',
-               backgroundColor:'rgba(0,0,0,0.7)',display:'flex',
-               alignItems:'center',justifyContent:'center',zIndex:9999,padding:'1rem' }}>
-      <div onClick={e=>e.stopPropagation()}
+      style={{
+        position: 'fixed', inset: 0, width: '100vw', height: '100vh',
+        backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem'
+      }}>
+      <div onClick={e => e.stopPropagation()}
         className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-modal dark:shadow-dark-modal w-full max-w-lg max-h-[92vh] flex flex-col animate-fadeIn overflow-hidden">
 
         {/* ── Hero header ── */}
         <div className="relative overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 px-6 pt-5 pb-5 flex-shrink-0">
           <div className="absolute inset-0 opacity-5"
-            style={{ backgroundImage:'radial-gradient(circle at 80% 20%, white 1px, transparent 1px)',backgroundSize:'20px 20px' }} />
+            style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
           {/* Close */}
           <button onClick={onClose}
@@ -160,7 +161,7 @@ function CandidateDetailModal({ app, onClose, onStatusChange, updating }) {
                 <div className="min-w-0">
                   <p className="text-xs text-slate-400">Applied</p>
                   <p className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">
-                    {new Date(app.appliedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
+                    {new Date(app.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </p>
                 </div>
               </div>
@@ -183,23 +184,21 @@ function CandidateDetailModal({ app, onClose, onStatusChange, updating }) {
                 <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                   Match Score
                 </p>
-                <span className={`text-sm font-bold ${
-                  app.matchScore >= 70 ? 'text-emerald-600 dark:text-emerald-400'
+                <span className={`text-sm font-bold ${app.matchScore >= 70 ? 'text-emerald-600 dark:text-emerald-400'
                   : app.matchScore >= 40 ? 'text-amber-600 dark:text-amber-400'
-                  : 'text-slate-400'
-                }`}>{Math.round(app.matchScore)}%</span>
+                    : 'text-slate-400'
+                  }`}>{Math.round(app.matchScore)}%</span>
               </div>
               <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                <div className={`h-full rounded-full transition-all duration-700 ${
-                  app.matchScore >= 70 ? 'bg-emerald-500'
+                <div className={`h-full rounded-full transition-all duration-700 ${app.matchScore >= 70 ? 'bg-emerald-500'
                   : app.matchScore >= 40 ? 'bg-amber-500'
-                  : 'bg-slate-400'
-                }`} style={{ width:`${Math.min(app.matchScore,100)}%` }} />
+                    : 'bg-slate-400'
+                  }`} style={{ width: `${Math.min(app.matchScore, 100)}%` }} />
               </div>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                 {app.matchScore >= 70 ? 'Strong match for this role'
-                 : app.matchScore >= 40 ? 'Moderate match'
-                 : 'Low match for this role'}
+                  : app.matchScore >= 40 ? 'Moderate match'
+                    : 'Low match for this role'}
               </p>
             </div>
           )}
@@ -252,10 +251,10 @@ function CandidateDetailModal({ app, onClose, onStatusChange, updating }) {
                       <div className="flex items-center gap-3 mt-1.5">
                         <p className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {new Date(exp.startDate).toLocaleDateString('en-US',{month:'short',year:'numeric'})}
+                          {new Date(exp.startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                           {' → '}
                           {exp.endDate
-                            ? new Date(exp.endDate).toLocaleDateString('en-US',{month:'short',year:'numeric'})
+                            ? new Date(exp.endDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
                             : 'Present'}
                         </p>
                         <p className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1">
@@ -290,15 +289,14 @@ function CandidateDetailModal({ app, onClose, onStatusChange, updating }) {
               <button key={opt.value}
                 disabled={status === opt.value || updating === app.applicationId}
                 onClick={() => { onStatusChange(app.applicationId, opt.value); onClose() }}
-                className={`py-2 text-xs font-semibold rounded-xl border transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-                  opt.value === 'Accepted'
-                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-500'
+                className={`py-2 text-xs font-semibold rounded-xl border transition-all disabled:opacity-40 disabled:cursor-not-allowed ${opt.value === 'Accepted'
+                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-500'
                   : opt.value === 'Rejected'
                     ? 'border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
-                  : opt.value === 'Shortlisted'
-                    ? 'bg-brand-600 hover:bg-brand-700 text-white border-brand-600'
-                  : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                }`}>
+                    : opt.value === 'Shortlisted'
+                      ? 'bg-brand-600 hover:bg-brand-700 text-white border-brand-600'
+                      : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  }`}>
                 {opt.label}
               </button>
             ))}
@@ -314,41 +312,37 @@ function CandidateDetailModal({ app, onClose, onStatusChange, updating }) {
    LEFT PANEL — Job Card
 ══════════════════════════════════════════════════════════ */
 function JobCard({ job, apps, isSelected, onClick }) {
-  const newCount    = apps.filter(a => a.applicationStatus === 'Applied').length
+  const newCount = apps.filter(a => a.applicationStatus === 'Applied').length
   const shortlisted = apps.filter(a => a.applicationStatus === 'Shortlisted').length
-  const accepted    = apps.filter(a => a.applicationStatus === 'Accepted').length
-  const other       = apps.length - newCount - shortlisted - accepted
-  const avgMatch    = apps.length
-    ? Math.round(apps.reduce((s,a) => s+(a.matchScore??0),0)/apps.length) : null
+  const accepted = apps.filter(a => a.applicationStatus === 'Accepted').length
+  const other = apps.length - newCount - shortlisted - accepted
+  const avgMatch = apps.length
+    ? Math.round(apps.reduce((s, a) => s + (a.matchScore ?? 0), 0) / apps.length) : null
 
   return (
     <button onClick={onClick}
-      className={`w-full text-left rounded-2xl border transition-all duration-200 ${
-        isSelected
-          ? 'bg-brand-600 border-brand-600 shadow-lg shadow-brand-500/20'
-          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-brand-300 dark:hover:border-brand-700 hover:shadow-card'
-      }`}>
+      className={`w-full text-left rounded-2xl border transition-all duration-200 ${isSelected
+        ? 'bg-brand-600 border-brand-600 shadow-lg shadow-brand-500/20'
+        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-brand-300 dark:hover:border-brand-700 hover:shadow-card'
+        }`}>
       <div className="p-4">
         {/* Top */}
         <div className="flex items-start gap-3 mb-3">
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-            isSelected ? 'bg-white/20 text-white' : jobColor(job.jobTitle||'')
-          }`}>
-            {(job.jobTitle||'?')[0].toUpperCase()}
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${isSelected ? 'bg-white/20 text-white' : jobColor(job.jobTitle || '')
+            }`}>
+            {(job.jobTitle || '?')[0].toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-1">
-              <p className={`font-semibold text-sm leading-snug truncate ${
-                isSelected ? 'text-white' : 'text-slate-900 dark:text-slate-100'
-              }`}>{job.jobTitle}</p>
+              <p className={`font-semibold text-sm leading-snug truncate ${isSelected ? 'text-white' : 'text-slate-900 dark:text-slate-100'
+                }`}>{job.jobTitle}</p>
               {newCount > 0 && (
-                <span className={`flex-shrink-0 text-xs font-bold px-1.5 py-0.5 rounded-full ${
-                  isSelected ? 'bg-white/20 text-white' : 'bg-amber-400 text-white'
-                }`}>+{newCount}</span>
+                <span className={`flex-shrink-0 text-xs font-bold px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-amber-400 text-white'
+                  }`}>+{newCount}</span>
               )}
             </div>
             <p className={`text-xs mt-0.5 ${isSelected ? 'text-white/70' : 'text-slate-400 dark:text-slate-500'}`}>
-              {apps.length} applicant{apps.length!==1?'s':''}
+              {apps.length} applicant{apps.length !== 1 ? 's' : ''}
               {avgMatch != null && ` · avg ${avgMatch}%`}
             </p>
           </div>
@@ -357,18 +351,18 @@ function JobCard({ job, apps, isSelected, onClick }) {
         {/* Progress bar */}
         {apps.length > 0 && (
           <div className="flex h-1.5 rounded-full overflow-hidden gap-0.5 mb-2">
-            {newCount    > 0 && <div className={`rounded-full ${isSelected?'bg-white/40':'bg-blue-400'}`}    style={{flex:newCount}}    />}
-            {shortlisted > 0 && <div className={`rounded-full ${isSelected?'bg-white/60':'bg-purple-400'}`}  style={{flex:shortlisted}} />}
-            {accepted    > 0 && <div className={`rounded-full ${isSelected?'bg-white/90':'bg-emerald-400'}`} style={{flex:accepted}}    />}
-            {other       > 0 && <div className={`rounded-full ${isSelected?'bg-white/20':'bg-slate-200 dark:bg-slate-600'}`} style={{flex:other}} />}
+            {newCount > 0 && <div className={`rounded-full ${isSelected ? 'bg-white/40' : 'bg-blue-400'}`} style={{ flex: newCount }} />}
+            {shortlisted > 0 && <div className={`rounded-full ${isSelected ? 'bg-white/60' : 'bg-purple-400'}`} style={{ flex: shortlisted }} />}
+            {accepted > 0 && <div className={`rounded-full ${isSelected ? 'bg-white/90' : 'bg-emerald-400'}`} style={{ flex: accepted }} />}
+            {other > 0 && <div className={`rounded-full ${isSelected ? 'bg-white/20' : 'bg-slate-200 dark:bg-slate-600'}`} style={{ flex: other }} />}
           </div>
         )}
 
-        <p className={`text-xs ${isSelected?'text-white/60':'text-slate-400 dark:text-slate-500'}`}>
+        <p className={`text-xs ${isSelected ? 'text-white/60' : 'text-slate-400 dark:text-slate-500'}`}>
           {[
-            newCount    > 0 && `${newCount} new`,
+            newCount > 0 && `${newCount} new`,
             shortlisted > 0 && `${shortlisted} shortlisted`,
-            accepted    > 0 && `${accepted} accepted`,
+            accepted > 0 && `${accepted} accepted`,
           ].filter(Boolean).join(' · ') || 'No applicants yet'}
         </p>
       </div>
@@ -380,12 +374,12 @@ function JobCard({ job, apps, isSelected, onClick }) {
    RIGHT PANEL — Candidate Row Card
 ══════════════════════════════════════════════════════════ */
 function CandidateCard({ app, onStatusChange, updating, onView }) {
-  const [open,    setOpen]    = useState(false)
-  const name   = app.applicantName || app.fullName || 'Applicant'
+  const [open, setOpen] = useState(false)
+  const name = app.applicantName || app.fullName || 'Applicant'
   const status = toStr(app.applicationStatus)
-  const cls    = STATUS_CLS[status] || 'bg-slate-100 text-slate-500 border-slate-200'
-  const skills = (app.applicantSkills || app.skills || '').split(',').map(s=>s.trim()).filter(Boolean)
-  const hasExp = (app.experiences||[]).length > 0
+  const cls = STATUS_CLS[status] || 'bg-slate-100 text-slate-500 border-slate-200'
+  const skills = (app.applicantSkills || app.skills || '').split(',').map(s => s.trim()).filter(Boolean)
+  const hasExp = (app.experiences || []).length > 0
 
   useEffect(() => {
     if (!open) return
@@ -414,13 +408,13 @@ function CandidateCard({ app, onStatusChange, updating, onView }) {
                 {app.appliedAt && (
                   <span className="flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
                     <Calendar className="w-3 h-3" />
-                    {new Date(app.appliedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+                    {new Date(app.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                 )}
                 {hasExp && (
                   <span className="flex items-center gap-1 text-xs text-brand-600 dark:text-brand-400">
                     <Briefcase className="w-3 h-3" />
-                    {(app.experiences||[]).length} exp
+                    {(app.experiences || []).length} exp
                   </span>
                 )}
               </div>
@@ -429,11 +423,10 @@ function CandidateCard({ app, onStatusChange, updating, onView }) {
             {/* Match score */}
             {app.matchScore != null && (
               <div className="text-right flex-shrink-0">
-                <span className={`font-display text-xl font-bold leading-none ${
-                  app.matchScore >= 70 ? 'text-emerald-600 dark:text-emerald-400'
+                <span className={`font-display text-xl font-bold leading-none ${app.matchScore >= 70 ? 'text-emerald-600 dark:text-emerald-400'
                   : app.matchScore >= 40 ? 'text-amber-600 dark:text-amber-400'
-                  : 'text-slate-400'
-                }`}>
+                    : 'text-slate-400'
+                  }`}>
                   {Math.round(app.matchScore)}<span className="text-xs font-semibold text-slate-400">%</span>
                 </span>
                 <p className="text-[10px] tracking-wider font-semibold text-slate-400 uppercase">Match</p>
@@ -444,9 +437,9 @@ function CandidateCard({ app, onStatusChange, updating, onView }) {
           {/* Skills */}
           {skills.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-2">
-              {skills.slice(0,4).map(s => <span key={s} className="skill-tag">{s}</span>)}
+              {skills.slice(0, 4).map(s => <span key={s} className="skill-tag">{s}</span>)}
               {skills.length > 4 && (
-                <span className="text-xs text-slate-400 dark:text-slate-500 self-center">+{skills.length-4}</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500 self-center">+{skills.length - 4}</span>
               )}
             </div>
           )}
@@ -475,14 +468,14 @@ function CandidateCard({ app, onStatusChange, updating, onView }) {
               )}
 
               {/* Dropdown */}
-              <div className="relative" onMouseDown={e=>e.stopPropagation()}>
+              <div className="relative" onMouseDown={e => e.stopPropagation()}>
                 <button
                   disabled={updating === app.applicationId}
-                  onClick={() => setOpen(o=>!o)}
+                  onClick={() => setOpen(o => !o)}
                   className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-xl bg-brand-600 hover:bg-brand-700 text-white transition-colors disabled:opacity-60">
                   {updating === app.applicationId
-                    ? <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>
-                    : <>Update <ChevronDown className="w-3 h-3"/></>
+                    ? <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70" /></svg>
+                    : <>Update <ChevronDown className="w-3 h-3" /></>
                   }
                 </button>
                 {open && (
@@ -510,17 +503,19 @@ function CandidateCard({ app, onStatusChange, updating, onView }) {
    MAIN PAGE
 ══════════════════════════════════════════════════════════ */
 export default function EmployerCandidates() {
-  const { user }     = useAuth()
+  const { user } = useAuth()
   const { addToast } = useToast()
+  const location = useLocation()
 
-  const [allApps,     setAllApps]     = useState([])
-  const [jobs,        setJobs]        = useState([])
-  const [loading,     setLoading]     = useState(true)
+  const [allApps, setAllApps] = useState([])
+  const [jobs, setJobs] = useState([])
+  const [loading, setLoading] = useState(true)
   const [selectedJob, setSelectedJob] = useState(null)
-  const [activeTab,   setActiveTab]   = useState(null)
-  const [search,      setSearch]      = useState('')
-  const [updating,    setUpdating]    = useState(null)
-  const [viewingApp,  setViewingApp]  = useState(null)
+  const [activeTab, setActiveTab] = useState(null)
+  const [search, setSearch] = useState('')
+  const [updating, setUpdating] = useState(null)
+  const [viewingApp, setViewingApp] = useState(null)
+  const [jobSearch, setJobSearch] = useState('')
 
   useEffect(() => {
     if (!user?.profileId) return
@@ -531,21 +526,43 @@ export default function EmployerCandidates() {
         const results = await Promise.allSettled(
           jobs.map(j =>
             employerApi.getApplicants(j.jobId)
-              .then(res => (res.data||[]).map(a => ({
-                ...a,
-                applicationStatus: toStr(a.applicationStatus),
-                jobTitle: j.jobTitle,
-                jobId:    j.jobId,
-              })))
+              .then(res => {
+                return (res.data || []).map(a => ({
+                  ...a,
+                  applicationStatus: toStr(a.applicationStatus),
+                  jobTitle: j.jobTitle,
+                  jobId: j.jobId,
+                }))
+              })
+              .catch(err => { throw err })
           )
         )
-        const flat = results.filter(r=>r.status==='fulfilled').flatMap(r=>r.value)
+        const flat = results.filter(r => r.status === 'fulfilled').flatMap(r => r.value)
         setAllApps(flat)
-        if (jobs.length > 0) setSelectedJob(jobs[0])
+
+        if (jobs.length > 0) {
+          // Preselect the job passed via navigation state (e.g. from "Candidates"
+          // button on a job card), falling back to the first job.
+          const targetId = location.state?.selectedJobId
+          const preselected = targetId != null
+            ? jobs.find(j => j.jobId === targetId)
+            : null
+          setSelectedJob(preselected || jobs[0])
+        }
       })
-      .catch(_err => addToast('Failed to load candidates', 'error'))
-      .finally(() => setLoading(false))
+      .catch(() => {
+        addToast('Failed to load candidates', 'error')
+      }).finally(() => setLoading(false))
   }, [user?.profileId])
+
+  // Whenever the selected job changes (including the initial preselect from
+  // navigation state), bring it into view inside the scrollable left panel —
+  // important once there are enough jobs that the list scrolls internally.
+  useEffect(() => {
+    if (!selectedJob || loading) return
+    const el = document.getElementById(`job-card-${selectedJob.jobId}`)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [selectedJob, loading])
 
   const handleStatusChange = async (appId, newStatus) => {
     setUpdating(appId)
@@ -568,10 +585,16 @@ export default function EmployerCandidates() {
     return map
   }, [allApps, jobs])
 
+  const filteredJobs = useMemo(() => {
+    if (!jobSearch) return jobs
+    const q = jobSearch.toLowerCase()
+    return jobs.filter(j => j.jobTitle?.toLowerCase().includes(q))
+  }, [jobs, jobSearch])
+
   const jobApps = useMemo(() =>
     selectedJob
       ? [...allApps.filter(a => a.jobId === selectedJob.jobId)]
-          .sort((a,b) => (b.matchScore??0)-(a.matchScore??0))
+        .sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0))
       : [],
     [allApps, selectedJob]
   )
@@ -583,16 +606,16 @@ export default function EmployerCandidates() {
       const q = search.toLowerCase()
       list = list.filter(a =>
         a.applicantName?.toLowerCase().includes(q) ||
-        a.fullName?.toLowerCase().includes(q)      ||
-        a.email?.toLowerCase().includes(q)          ||
-        (a.applicantSkills||a.skills||'').toLowerCase().includes(q)
+        a.fullName?.toLowerCase().includes(q) ||
+        a.email?.toLowerCase().includes(q) ||
+        (a.applicantSkills || a.skills || '').toLowerCase().includes(q)
       )
     }
     return list
   }, [jobApps, activeTab, search])
 
   const tabCounts = useMemo(() =>
-    STATUS_TABS.reduce((acc,t) => {
+    STATUS_TABS.reduce((acc, t) => {
       acc[t.value] = t.value === null
         ? jobApps.length
         : jobApps.filter(a => a.applicationStatus === t.value).length
@@ -602,7 +625,7 @@ export default function EmployerCandidates() {
   )
 
   const avgMatch = jobApps.length
-    ? Math.round(jobApps.reduce((s,a)=>s+(a.matchScore??0),0)/jobApps.length)
+    ? Math.round(jobApps.reduce((s, a) => s + (a.matchScore ?? 0), 0) / jobApps.length)
     : null
 
   return (
@@ -621,16 +644,16 @@ export default function EmployerCandidates() {
 
       {loading ? (
         <div className="grid lg:grid-cols-5 gap-5">
-          <div className="lg:col-span-1 space-y-3">{Array(3).fill(0).map((_,i)=><CardSkeleton key={i}/>)}</div>
-          <div className="lg:col-span-4 space-y-3">{Array(3).fill(0).map((_,i)=><CardSkeleton key={i}/>)}</div>
+          <div className="lg:col-span-1 space-y-3">{Array(3).fill(0).map((_, i) => <CardSkeleton key={i} />)}</div>
+          <div className="lg:col-span-4 space-y-3">{Array(3).fill(0).map((_, i) => <CardSkeleton key={i} />)}</div>
         </div>
       ) : (
         <div className="grid lg:grid-cols-7 gap-5 items-start">
 
-          {/* ── LEFT: job list ── */}
-          <div className="lg:col-span-2">
-            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-3">
-              {jobs.length} listing{jobs.length!==1?'s':''} · select to view
+          {/* ── LEFT: job list — pinned to viewport, scrolls independently ── */}
+          <div className="lg:col-span-2 lg:sticky lg:top-5 lg:self-start lg:max-h-[calc(100vh-2.5rem)] flex flex-col">
+            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-3 flex-shrink-0">
+              {jobs.length} listing{jobs.length !== 1 ? 's' : ''} · select to view
             </p>
 
             {jobs.length === 0 ? (
@@ -643,15 +666,41 @@ export default function EmployerCandidates() {
                 </Link>
               </div>
             ) : (
-              <div className="space-y-2.5">
-                {jobs.map(job => (
-                  <JobCard key={job.jobId} job={job}
-                    apps={appsByJob[job.jobId]||[]}
-                    isSelected={selectedJob?.jobId === job.jobId}
-                    onClick={() => { setSelectedJob(job); setActiveTab(null); setSearch('') }}
-                  />
-                ))}
-              </div>
+              <>
+                {/* Job search — only really needed once the list gets long */}
+                {jobs.length > 5 && (
+                  <div className="relative mb-2.5 flex-shrink-0">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                    <input type="text" placeholder="Search your listings…"
+                      value={jobSearch} onChange={e => setJobSearch(e.target.value)}
+                      className="input pl-9 py-2 text-sm w-full" />
+                    {jobSearch && (
+                      <button onClick={() => setJobSearch('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                <div className="space-y-2.5 overflow-y-auto pr-1 -mr-1">
+                  {filteredJobs.length === 0 ? (
+                    <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-6">
+                      No listings match "{jobSearch}"
+                    </p>
+                  ) : (
+                    filteredJobs.map(job => (
+                      <div key={job.jobId} id={`job-card-${job.jobId}`}>
+                        <JobCard job={job}
+                          apps={appsByJob[job.jobId] || []}
+                          isSelected={selectedJob?.jobId === job.jobId}
+                          onClick={() => { setSelectedJob(job); setActiveTab(null); setSearch('') }}
+                        />
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
             )}
           </div>
 
@@ -677,7 +726,7 @@ export default function EmployerCandidates() {
                     )}
                   </div>
                   <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                    {jobApps.length} total applicant{jobApps.length!==1?'s':''}
+                    {jobApps.length} total applicant{jobApps.length !== 1 ? 's' : ''}
                   </p>
                 </div>
 
@@ -685,13 +734,12 @@ export default function EmployerCandidates() {
                 <div className="flex flex-wrap gap-1.5">
                   {STATUS_TABS.map(t => (
                     <button key={String(t.value)} onClick={() => setActiveTab(t.value)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${
-                        activeTab === t.value
-                          ? 'bg-brand-600 text-white border-brand-600'
-                          : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-brand-400'
-                      }`}>
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${activeTab === t.value
+                        ? 'bg-brand-600 text-white border-brand-600'
+                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-brand-400'
+                        }`}>
                       {t.label}
-                      <span className={`ml-1 text-xs ${activeTab===t.value?'opacity-70':'text-slate-400'}`}>
+                      <span className={`ml-1 text-xs ${activeTab === t.value ? 'opacity-70' : 'text-slate-400'}`}>
                         ({tabCounts[t.value]})
                       </span>
                     </button>
@@ -702,12 +750,12 @@ export default function EmployerCandidates() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                   <input type="text" placeholder="Search name, email, skills…"
-                    value={search} onChange={e=>setSearch(e.target.value)}
+                    value={search} onChange={e => setSearch(e.target.value)}
                     className="input pl-9 py-2 text-sm w-full" />
                   {search && (
-                    <button onClick={()=>setSearch('')}
+                    <button onClick={() => setSearch('')}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                      <X className="w-3.5 h-3.5"/>
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
@@ -717,15 +765,15 @@ export default function EmployerCandidates() {
                   <div className="card text-center py-12 border-dashed border-2 border-slate-200 dark:border-slate-700">
                     <Users className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
                     <p className="font-semibold text-slate-700 dark:text-slate-300 mb-1 text-sm">
-                      {jobApps.length===0 ? 'No applications yet' : 'No candidates match filters'}
+                      {jobApps.length === 0 ? 'No applications yet' : 'No candidates match filters'}
                     </p>
                     <p className="text-xs text-slate-400 dark:text-slate-500">
-                      {jobApps.length===0 ? 'Share this listing to attract applicants' : 'Try clearing your filters'}
+                      {jobApps.length === 0 ? 'Share this listing to attract applicants' : 'Try clearing your filters'}
                     </p>
-                    {(search||activeTab!==null) && (
-                      <button onClick={()=>{setSearch('');setActiveTab(null)}}
+                    {(search || activeTab !== null) && (
+                      <button onClick={() => { setSearch(''); setActiveTab(null) }}
                         className="btn-outline mt-3 inline-flex text-xs gap-1">
-                        <X className="w-3.5 h-3.5"/> Clear filters
+                        <X className="w-3.5 h-3.5" /> Clear filters
                       </button>
                     )}
                   </div>
