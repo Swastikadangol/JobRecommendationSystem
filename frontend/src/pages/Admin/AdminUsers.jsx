@@ -7,7 +7,7 @@ import UserDetailModal from './AdminUserDetail'
 import {
   Users, Search, X, ShieldOff, Trash2,
   CircleCheck, Mail, Calendar, Eye,
-  Building2, Briefcase
+  Building2, Briefcase, FileText
 } from 'lucide-react'
 
 const ROLE_TABS = [
@@ -277,6 +277,20 @@ export default function AdminUsers() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 flex-shrink-0">
+                     {/* Resume — job seekers only, if they've uploaded one */}
+  {isJobSeeker && u.resume && (
+    <a
+     href={`${import.meta.env.VITE_API_URL || 'https://localhost:7227'}/${u.resume}`}
+      target="_blank"
+      rel="noreferrer"
+      className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-xl 
+      border border-emerald-200 dark:border-emerald-800/40 
+      text-emerald-600 dark:text-emerald-400 
+      hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all"
+    >
+      <FileText className="w-3.5 h-3.5" /> Resume
+    </a>
+  )}
                     {/* VIEW button — prominent */}
                     <button
                       onClick={() => setViewing(u.userId)}

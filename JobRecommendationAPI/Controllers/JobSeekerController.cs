@@ -6,6 +6,8 @@ using JobRecommendationAPI.Repositories.Interfaces;
 using JobRecommendationAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 using ExperienceDto = JobRecommendationAPI.DTOs.Application.ExperienceDto;
 
 namespace JobRecommendationAPI.Controllers
@@ -19,17 +21,19 @@ namespace JobRecommendationAPI.Controllers
         private readonly IJobRepository _jobRepo;
         private readonly IApplicationRepository _appRepo;
         private readonly RecommendationService _recommender;
+        private readonly IWebHostEnvironment _env;
 
         public JobSeekerController(
             IJobSeekerRepository jsRepo,
             IJobRepository jobRepo,
             IApplicationRepository appRepo,
-            RecommendationService recommender)
+            RecommendationService recommender, IWebHostEnvironment env)
         {
             _jsRepo = jsRepo;
             _jobRepo = jobRepo;
             _appRepo = appRepo;
             _recommender = recommender;
+            _env = env;
         }
 
         // ==================== PROFILE CRUD ====================
@@ -38,19 +42,25 @@ namespace JobRecommendationAPI.Controllers
         public async Task<IActionResult> GetProfile(int id)
         {
             var profile = await _jsRepo.GetByIdAsync(id);
+
             if (profile == null)
                 return NotFound(new { message = "Profile not found" });
 
-           return Ok(new
-{
-    profile.JobSeekerId,
-    profile.FullName,
-    profile.Phone,
-    profile.Skills,
-    profile.EducationLevel,
-    profile.PreferredJobType,
-    profile.PreferredWorkMode
-});
+            return Ok(new
+            {
+                profile.JobSeekerId,
+                profile.FullName,
+                profile.Phone,
+
+                Resume = string.IsNullOrEmpty(profile.Resume)
+                    ? null
+                    : $"{Request.Scheme}://{Request.Host}/{profile.Resume}",
+
+                profile.Skills,
+                profile.EducationLevel,
+                profile.PreferredJobType,
+                profile.PreferredWorkMode
+            });
         }
 
         [HttpPut("profile/{id}")]
@@ -79,6 +89,150 @@ namespace JobRecommendationAPI.Controllers
                     profile.PreferredJobType,
                     profile.PreferredWorkMode
                 }
+            });
+        }
+
+        [HttpPost("profile/{id}/upload-resume")]
+        public async Task<IActionResult> UploadResume(int id, IFormFile resume)
+        {
+            // Get logged-in user id from JWT
+            var userId = int.Parse(User.FindFirst("userId")!.Value);
+
+            // Get the logged-in user's profile
+            var loggedInProfile = await _jsRepo.GetByUserIdAsync(userId);
+
+            if (loggedInProfile == null)
+                return Unauthorized();
+
+            // Make sure the user is uploading only to their own profile
+            if (loggedInProfile.JobSeekerId != id)
+            {
+                return Forbid();
+            }
+
+            // Check if job seeker exists
+            var profile = await _jsRepo.GetByIdAsync(id);
+
+            if (profile == null)
+                return NotFound(new { message = "Profile not found" });
+
+            // If the user already has a resume, delete the old file
+            if (!string.IsNullOrWhiteSpace(profile.Resume))
+            {
+                var oldFilePath = Path.Combine(
+    _env.WebRootPath,
+    profile.Resume.Replace("/", Path.DirectorySeparatorChar.ToString())
+);
+
+                if (System.IO.File.Exists(oldFilePath))
+                {
+                    System.IO.File.Delete(oldFilePath);
+                }
+            }
+
+            // Check if file selected
+            if (resume == null || resume.Length == 0)
+                return BadRequest(new { message = "Please select a resume." });
+
+            var allowedContentTypes = new[]
+{
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+};
+
+            if (!allowedContentTypes.Contains(resume.ContentType))
+            {
+                return BadRequest(new
+                {
+                    message = "Invalid file type."
+                });
+            }
+
+            // Allow only PDF, DOC and DOCX
+            var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
+            var extension = Path.GetExtension(resume.FileName).ToLower();
+
+            if (!allowedExtensions.Contains(extension))
+                return BadRequest(new
+                {
+                    message = "Only PDF, DOC and DOCX files are allowed."
+                });
+
+            // Maximum allowed file size (5 MB)
+            const long maxFileSize = 5 * 1024 * 1024;
+
+            if (resume.Length > maxFileSize)
+            {
+                return BadRequest(new
+                {
+                    message = "Maximum file size is 5 MB."
+                });
+            }
+
+            // Folder path
+            var folderPath = Path.Combine(
+    _env.WebRootPath,
+    "uploads",
+    "resumes");
+
+            // Create folder if it doesn't exist
+            if (!Directory.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
+
+            // Unique file name
+            var fileName = $"{Guid.NewGuid()}{extension}";
+
+            var filePath = Path.Combine(folderPath, fileName);
+
+            // Save file
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await resume.CopyToAsync(stream);
+            }
+
+            // Relative path saved in database
+            var resumePath = $"uploads/resumes/{fileName}";
+            var resumeUrl = $"{Request.Scheme}://{Request.Host}/{resumePath}";
+
+            // Save path
+            await _jsRepo.UploadResumeAsync(id, resumePath);
+
+            return Ok(new
+            {
+                message = "Resume uploaded successfully.",
+                resume = resumeUrl
+            });
+        }
+
+        [HttpDelete("profile/{id}/delete-resume")]
+        public async Task<IActionResult> DeleteResume(int id)
+        {
+            var profile = await _jsRepo.GetByIdAsync(id);
+
+            if (profile == null)
+                return NotFound(new { message = "Profile not found." });
+
+            if (string.IsNullOrWhiteSpace(profile.Resume))
+                return BadRequest(new { message = "No resume uploaded." });
+
+            // Physical file path
+            var fullPath = Path.Combine(
+       _env.WebRootPath,
+       profile.Resume);
+
+            // Delete file if it exists
+            if (System.IO.File.Exists(fullPath))
+            {
+                System.IO.File.Delete(fullPath);
+            }
+
+            // Remove path from database
+            await _jsRepo.DeleteResumeAsync(id);
+
+            return Ok(new
+            {
+                message = "Resume deleted successfully."
             });
         }
 
@@ -362,6 +516,8 @@ namespace JobRecommendationAPI.Controllers
 
             return (int)(totalMonths / 12);
         }
+
+       
 
     }
 }

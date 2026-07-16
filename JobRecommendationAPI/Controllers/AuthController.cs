@@ -5,6 +5,7 @@ using JobRecommendationAPI.Repositories.Interfaces;
 using JobRecommendationAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using BCrypt.Net;
 
 namespace JobRecommendationAPI.Controllers
 {
@@ -177,6 +178,13 @@ namespace JobRecommendationAPI.Controllers
         {
             var hash = BCrypt.Net.BCrypt.HashPassword(password);
             return Ok(new { password, hash });
+        }
+
+        [HttpGet("hash-test")]
+        public IActionResult HashTest()
+        {
+            var hash = BCrypt.Net.BCrypt.HashPassword("Admin@123");
+            return Ok(new { hash });
         }
     }
 }

@@ -40,6 +40,25 @@ export const authApi = {
 export const jobSeekerApi = {
   getProfile: (id) => api.get(`/api/jobseeker/profile/${id}`),
   updateProfile: (id, data) => api.put(`/api/jobseeker/profile/${id}`, data),
+  
+  uploadResume: (id, file) => {
+  const formData = new FormData();
+  formData.append("resume", file);
+
+  return api.post(
+    `/api/jobseeker/profile/${id}/upload-resume`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+},
+
+deleteResume: (id) =>
+  api.delete(`/api/jobseeker/profile/${id}/delete-resume`),
+
   getExperiences: (id) => api.get(`/api/jobseeker/profile/${id}/experiences`),
   addExperience: (id, data) => api.post(`/api/jobseeker/profile/${id}/experience`, data),
   updateExperience: (expId, data) => api.put(`/api/jobseeker/experience/${expId}`, data),
@@ -48,6 +67,8 @@ export const jobSeekerApi = {
     api.get(`/api/jobseeker/jobs/${id}`, { params }), getRecommendations: (id, params) => api.get(`/api/jobseeker/recommendations/${id}`, { params }),
   apply: (data) => api.post('/api/jobseeker/apply', data),
   getApplications: (id) => api.get(`/api/jobseeker/applications/${id}`),
+
+
 }
 
 // ───── EMPLOYER ─────

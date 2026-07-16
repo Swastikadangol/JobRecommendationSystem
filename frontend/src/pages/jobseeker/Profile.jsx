@@ -2,27 +2,28 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { jobSeekerApi } from '../../api'
+import { createPortal } from 'react-dom'
 import {
   initials, avatarColor, educationLabel,
   jobTypeLabel, workModeLabel, parseSkills
 } from '../../utils/helpers'
 import {
-  Phone, BookOpen, Briefcase, MapPin, Plus, Pencil,
-  Trash2, Save, X, Calendar, Mail, Settings, ChevronRight
+  Phone, BookOpen, Briefcase, MapPin, Plus, Pencil, CircleAlert,
+  Trash2, Save, X, Calendar, Mail, Settings, ChevronRight, Upload, FileText
 } from 'lucide-react'
 
 const EDUCATION_OPTS = [
   { value: '0', label: 'High School' }, { value: '1', label: 'Diploma' },
-  { value: '2', label: 'Bachelor'    }, { value: '3', label: 'Master'  },
-  { value: '4', label: 'PhD'         },
+  { value: '2', label: 'Bachelor' }, { value: '3', label: 'Master' },
+  { value: '4', label: 'PhD' },
 ]
 const JOB_TYPE_OPTS = [
-  { value: '',  label: 'Any type'   }, { value: '0', label: 'Full-time'  },
-  { value: '1', label: 'Part-time'  }, { value: '2', label: 'Internship' },
+  { value: '', label: 'Any type' }, { value: '0', label: 'Full-time' },
+  { value: '1', label: 'Part-time' }, { value: '2', label: 'Internship' },
 ]
 const WORK_MODE_OPTS = [
-  { value: '',  label: 'Any mode' }, { value: '0', label: 'On-site' },
-  { value: '1', label: 'Remote'   }, { value: '2', label: 'Hybrid'  },
+  { value: '', label: 'Any mode' }, { value: '0', label: 'On-site' },
+  { value: '1', label: 'Remote' }, { value: '2', label: 'Hybrid' },
 ]
 
 /* ── Enum name → numeric value maps ─────────────────────────
@@ -52,10 +53,10 @@ function normalizeEnumValue(raw, nameToValue) {
 /* ── Experience Modal ──────────────────────────────────── */
 function ExperienceModal({ exp, onSave, onClose }) {
   const [form, setForm] = useState({
-    jobTitle:    exp?.jobTitle    || '',
+    jobTitle: exp?.jobTitle || '',
     companyName: exp?.companyName || '',
-    startDate:   exp?.startDate   ? exp.startDate.split('T')[0] : '',
-    endDate:     exp?.endDate     ? exp.endDate.split('T')[0]   : '',
+    startDate: exp?.startDate ? exp.startDate.split('T')[0] : '',
+    endDate: exp?.endDate ? exp.endDate.split('T')[0] : '',
     description: exp?.description || '',
   })
 
@@ -136,11 +137,11 @@ function ExperienceModal({ exp, onSave, onClose }) {
 /* ── Edit Profile Modal ────────────────────────────────── */
 function EditProfileModal({ profile, onSave, onClose, saving }) {
   const buildForm = (p) => ({
-    fullName:          p?.fullName          ?? '',
-    phone:             p?.phone             ?? '',
-    skills:            p?.skills            ?? '',
-    educationLevel:    normalizeEnumValue(p?.educationLevel,    EDUCATION_NAME_TO_VALUE),
-    preferredJobType:  normalizeEnumValue(p?.preferredJobType,  JOB_TYPE_NAME_TO_VALUE),
+    fullName: p?.fullName ?? '',
+    phone: p?.phone ?? '',
+    skills: p?.skills ?? '',
+    educationLevel: normalizeEnumValue(p?.educationLevel, EDUCATION_NAME_TO_VALUE),
+    preferredJobType: normalizeEnumValue(p?.preferredJobType, JOB_TYPE_NAME_TO_VALUE),
     preferredWorkMode: normalizeEnumValue(p?.preferredWorkMode, WORK_MODE_NAME_TO_VALUE),
   })
 
@@ -254,21 +255,59 @@ function EditProfileModal({ profile, onSave, onClose, saving }) {
     </div>
   )
 }
+function DeleteResumeModal({ onConfirm, onCancel }) {
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-xs p-6 text-center">
+        
+        <CircleAlert className="w-10 h-10 text-red-500 mx-auto mb-3" />
+
+        <h3 className="font-semibold mb-1">
+          Delete Resume?
+        </h3>
+
+        <p className="text-sm text-slate-500 mb-5">
+          Your uploaded resume will be permanently removed.
+        </p>
+
+        <div className="flex gap-2">
+          <button
+            onClick={onCancel}
+            className="flex-1 px-3 py-2 rounded-lg border"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={onConfirm}
+            className="flex-1 px-3 py-2 rounded-lg bg-red-500 text-white"
+          >
+            Delete
+          </button>
+        </div>
+
+      </div>
+    </div>
+  )
+}
 
 /* ── Main Profile Page ─────────────────────────────────── */
 export default function Profile() {
   const { user, updateUser } = useAuth()
-  const { addToast }         = useToast()
-  const profileId            = user?.profileId
+  const { addToast } = useToast()
+  const profileId = user?.profileId
 
-  const [profile, setProfile]       = useState(null)
+  const [profile, setProfile] = useState(null)
   const [experiences, setExperiences] = useState([])
-  const [loading, setLoading]       = useState(true)
+  const [loading, setLoading] = useState(true)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [saving, setSaving]         = useState(false)
-  const [showExpModal, setShowExpModal]   = useState(false)
-  const [editingExp, setEditingExp]       = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [showExpModal, setShowExpModal] = useState(false)
+  const [editingExp, setEditingExp] = useState(null)
 
+  const [resumeFile, setResumeFile] = useState(null)
+  const [uploadingResume, setUploadingResume] = useState(false)
+  const [showDeleteResume, setShowDeleteResume] = useState(false)
   useEffect(() => {
     if (!profileId) return
     Promise.all([
@@ -279,7 +318,7 @@ export default function Profile() {
         setProfile(pRes.data)
         setExperiences(eRes.data || [])
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false))
   }, [profileId])
 
@@ -287,11 +326,11 @@ export default function Profile() {
     setSaving(true)
     try {
       const payload = {
-        fullName:          form.fullName,
-        phone:             form.phone,
-        skills:            form.skills,
-        educationLevel:    form.educationLevel    !== '' ? parseInt(form.educationLevel)    : null,
-        preferredJobType:  form.preferredJobType  !== '' ? parseInt(form.preferredJobType)  : null,
+        fullName: form.fullName,
+        phone: form.phone,
+        skills: form.skills,
+        educationLevel: form.educationLevel !== '' ? parseInt(form.educationLevel) : null,
+        preferredJobType: form.preferredJobType !== '' ? parseInt(form.preferredJobType) : null,
         preferredWorkMode: form.preferredWorkMode !== '' ? parseInt(form.preferredWorkMode) : null,
       }
       await jobSeekerApi.updateProfile(profileId, payload)
@@ -309,10 +348,10 @@ export default function Profile() {
   const handleSaveExp = async (expForm) => {
     try {
       const payload = {
-        jobTitle:    expForm.jobTitle,
+        jobTitle: expForm.jobTitle,
         companyName: expForm.companyName,
-        startDate:   expForm.startDate || null,
-        endDate:     expForm.endDate   || null,
+        startDate: expForm.startDate || null,
+        endDate: expForm.endDate || null,
         description: expForm.description,
       }
       if (editingExp) {
@@ -345,6 +384,46 @@ export default function Profile() {
     }
   }
 
+  const handleUploadResume = async () => {
+    if (!resumeFile) {
+      addToast("Please select a resume.", "error")
+      return
+    }
+
+    try {
+      setUploadingResume(true)
+
+      const { data } = await jobSeekerApi.uploadResume(
+        profileId,
+        resumeFile
+      )
+
+      setProfile(prev => ({
+        ...prev,
+        resume: data.resume
+      }))
+
+      setResumeFile(null)
+
+      addToast("Resume uploaded successfully.", "success")
+    } catch {
+      addToast("Failed to upload resume.", "error")
+    } finally {
+      setUploadingResume(false)
+    }
+  }
+
+  const handleDeleteResume = async () => {
+    await jobSeekerApi.deleteResume(profileId)
+
+    setProfile(prev => ({
+      ...prev,
+      resume: null
+    }))
+
+    addToast("Resume deleted successfully.", "success")
+  }
+
   if (loading) {
     return (
       <div className="animate-fadeIn space-y-4">
@@ -357,10 +436,10 @@ export default function Profile() {
     )
   }
 
-  const name     = profile?.fullName || user?.userName || 'User'
+  const name = profile?.fullName || user?.userName || 'User'
   const colorCls = avatarColor(name)
-  const initStr  = initials(name)
-  const skills   = parseSkills(profile?.skills)
+  const initStr = initials(name)
+  const skills = parseSkills(profile?.skills)
 
   return (
     <div className="animate-fadeIn space-y-5">
@@ -482,10 +561,10 @@ export default function Profile() {
           </h2>
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {[
-              { icon: Phone,    label: 'Phone',          value: profile?.phone },
-              { icon: BookOpen, label: 'Education',      value: profile?.educationLevel    != null ? educationLabel(profile.educationLevel)        : null },
-              { icon: Briefcase,label: 'Preferred type', value: profile?.preferredJobType  != null ? jobTypeLabel(profile.preferredJobType)         : null },
-              { icon: MapPin,   label: 'Preferred mode', value: profile?.preferredWorkMode != null ? workModeLabel(profile.preferredWorkMode)       : null },
+              { icon: Phone, label: 'Phone', value: profile?.phone },
+              { icon: BookOpen, label: 'Education', value: profile?.educationLevel != null ? educationLabel(profile.educationLevel) : null },
+              { icon: Briefcase, label: 'Preferred type', value: profile?.preferredJobType != null ? jobTypeLabel(profile.preferredJobType) : null },
+              { icon: MapPin, label: 'Preferred mode', value: profile?.preferredWorkMode != null ? workModeLabel(profile.preferredWorkMode) : null },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="flex items-center justify-between py-2.5 gap-3">
                 <div className="flex items-center gap-2.5">
@@ -499,6 +578,67 @@ export default function Profile() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Resume */}
+      <div className="card">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-display font-semibold">
+            Resume / CV
+          </h2>
+        </div>
+
+        {profile?.resume ? (
+          <div className="space-y-3">
+
+            <div className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-brand-600" />
+              <span>Resume uploaded</span>
+            </div>
+
+            <div className="flex gap-3">
+
+              <a
+                href={profile.resume}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-outline"
+              >
+                View Resume
+              </a>
+
+              <button onClick={() => setShowDeleteResume(true)}>
+                Delete Resume
+              </button>
+
+            </div>
+
+          </div>
+        ) : (
+          <div className="space-y-3">
+
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              onChange={(e) =>
+                setResumeFile(e.target.files[0])
+              }
+            />
+
+            <button
+              onClick={handleUploadResume}
+              disabled={uploadingResume}
+              className="btn-primary"
+            >
+              <Upload className="w-4 h-4" />
+
+              {uploadingResume
+                ? "Uploading..."
+                : "Upload Resume"}
+            </button>
+
+          </div>
+        )}
       </div>
 
       {/* ── Experience ── */}
@@ -587,21 +727,45 @@ export default function Profile() {
       </div>
 
       {/* Modals */}
-      {showEditModal && (
-        <EditProfileModal
-          profile={profile}
-          onSave={handleSaveProfile}
-          onClose={() => setShowEditModal(false)}
-          saving={saving}
-        />
-      )}
-      {showExpModal && (
-        <ExperienceModal
-          exp={editingExp}
-          onSave={handleSaveExp}
-          onClose={() => { setShowExpModal(false); setEditingExp(null) }}
-        />
-      )}
+      {showEditModal &&
+        createPortal(
+          <EditProfileModal
+            profile={profile}
+            onSave={handleSaveProfile}
+            onClose={() => setShowEditModal(false)}
+            saving={saving}
+          />,
+          document.body
+        )
+      }
+
+      {showExpModal &&
+        createPortal(
+          <ExperienceModal
+            exp={editingExp}
+            onSave={handleSaveExp}
+            onClose={() => {
+              setShowExpModal(false)
+              setEditingExp(null)
+            }}
+          />,
+          document.body
+        )
+      }
+
+      {showDeleteResume &&
+        createPortal(
+          <DeleteResumeModal
+            onCancel={() => setShowDeleteResume(false)}
+            onConfirm={() => {
+              handleDeleteResume()
+              setShowDeleteResume(false)
+            }}
+          />,
+          document.body
+        )
+      }
     </div>
+
   )
 }

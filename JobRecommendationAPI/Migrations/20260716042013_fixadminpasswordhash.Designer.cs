@@ -4,6 +4,7 @@ using JobRecommendationAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace JobRecommendationAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260716042013_fixadminpasswordhash")]
+    partial class fixadminpasswordhash
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -294,6 +297,18 @@ namespace JobRecommendationAPI.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = 1,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "admin@jobrec.com",
+                            Password = "$2a$11$oLpYr/taY9HT6HiCd.IpFOfw5eGJC5kPxeQXW47OqaCJpTrR90Dsq",
+                            Role = "Admin",
+                            Status = "Active",
+                            UserName = "admin"
+                        });
                 });
 
             modelBuilder.Entity("JobRecommendationAPI.Models.Application", b =>

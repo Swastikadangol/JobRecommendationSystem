@@ -72,16 +72,37 @@ builder.Services.AddHttpClient<GeminiService>();
 builder.Services.AddScoped<GeminiService>();
 var app = builder.Build();
 
+// One-time admin seeding — safe to leave in permanently,
+// only inserts if no admin exists yet, never overwrites.
+//password: Admin@123
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    if (!db.Users.Any(u => u.Role == Role.Admin))
+    {
+        db.Users.Add(new User
+        {
+            UserName = "admin",
+            Email = "admin@jobrec.com",
+            Password = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
+            Role = Role.Admin,
+            Status = UserStatus.Active,
+            CreatedAt = DateTime.UtcNow
+        });
+        db.SaveChanges();
+    }
+}
+
 // Swagger UI
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseHttpsRedirection();
 app.UseCors("AllowAll");
+app.UseStaticFiles();
 app.UseAuthentication();    
 app.UseAuthorization();
-app.UseHttpsRedirection();
 app.MapControllers();
 app.Run();

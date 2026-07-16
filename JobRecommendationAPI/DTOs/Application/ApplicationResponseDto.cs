@@ -18,6 +18,7 @@ namespace JobRecommendationAPI.DTOs.Application
         public string? ApplicantSkills { get; set; }
         public string? ApplicantPhone {get; set;}
         public string? ApplicantEducation {get; set;}
+        public string? ApplicantResume { get; set; }
 
 
         public ApplicationStatus ApplicationStatus { get; set; }

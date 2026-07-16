@@ -218,6 +218,7 @@ namespace JobRecommendationAPI.Controllers
                 ApplicantSkills = a.JobSeeker?.Skills,
                 ApplicantPhone = a.JobSeeker?.Phone,
                 ApplicantEducation = a.JobSeeker?.EducationLevel?.ToString(),
+                ApplicantResume = a.JobSeeker?.Resume,
 
                 ApplicationStatus = a.ApplicationStatus,
 

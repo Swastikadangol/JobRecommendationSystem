@@ -43,6 +43,33 @@ namespace JobRecommendationAPI.Repositories.Implementation
             return jobSeeker;
         }
 
+        //upload resume
+        public async Task UploadResumeAsync(int jobSeekerId, string resumePath)
+        {
+            var jobSeeker = await _db.JobSeekers.FindAsync(jobSeekerId);
+
+            if (jobSeeker == null)
+                throw new KeyNotFoundException("Job seeker not found.");
+
+            // Save the uploaded resume path
+            jobSeeker.Resume = resumePath;
+
+            await _db.SaveChangesAsync();
+        }
+
+        //delete resume
+        public async Task DeleteResumeAsync(int jobSeekerId)
+        {
+            var jobSeeker = await _db.JobSeekers.FindAsync(jobSeekerId);
+
+            if (jobSeeker == null)
+                throw new KeyNotFoundException("Job seeker not found.");
+
+            jobSeeker.Resume = null;
+
+            await _db.SaveChangesAsync();
+        }
+
         //experience
         public async Task<Experience> AddExperienceAsync(int jobSeekerId,Experience experience)
         {

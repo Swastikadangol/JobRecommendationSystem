@@ -95,15 +95,30 @@ namespace JobRecommendationAPI.Controllers
         public async Task<IActionResult> GetAllUsers()
         {
             var users = await _userRepo.GetAllAsync();
-            return Ok(users.Select(u => new
+            var result = new List<object>();
+
+            foreach (var u in users)
             {
-                u.UserId,
-                u.UserName,
-                u.Email,
-                u.Role,
-                u.Status,
-                u.CreatedAt
-            }));
+                string? resume = null;
+                if (u.Role == Role.JobSeeker)
+                {
+                    var profile = await _jobSeekerRepo.GetByUserIdAsync(u.UserId);
+                    resume = profile?.Resume;
+                }
+
+                result.Add(new
+                {
+                    u.UserId,
+                    u.UserName,
+                    u.Email,
+                    u.Role,
+                    u.Status,
+                    u.CreatedAt,
+                    resume
+                });
+            }
+
+            return Ok(result);
         }
 
         [HttpGet("users/jobseekers")]
@@ -119,11 +134,13 @@ namespace JobRecommendationAPI.Controllers
                     u.UserId,
                     u.UserName,
                     u.Email,
+                    role = "JobSeeker",
                     u.Status,
                     u.CreatedAt,
                     profileId    = profile?.JobSeekerId,
                     fullName     = profile?.FullName,
                     phone        = profile?.Phone,
+                    resume = profile?.Resume,
                     skills       = profile?.Skills,
                     education    = profile?.EducationLevel,
                     totalApps    = profile?.Applications?.Count ?? 0
@@ -145,6 +162,7 @@ namespace JobRecommendationAPI.Controllers
                     u.UserId,
                     u.UserName,
                     u.Email,
+                    role = "Employer",
                     u.Status,
                     u.CreatedAt,
                     profileId     = profile?.EmployerId,
@@ -181,6 +199,7 @@ namespace JobRecommendationAPI.Controllers
                         profile.JobSeekerId,
                         profile.FullName,
                         profile.Phone,
+                        resume = profile.Resume,
                         profile.Skills,
                         education         = profile.EducationLevel,
                         preferredJobType  = profile.PreferredJobType,

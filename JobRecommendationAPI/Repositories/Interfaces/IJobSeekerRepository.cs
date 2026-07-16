@@ -14,6 +14,10 @@
         //update jobseeker profile data(name, phone, resuje, skills ect)
         Task<JobSeeker> UpdateAsync(JobSeeker jobSeeker);
 
+        //resume
+        Task UploadResumeAsync(int jobSeekerId, string resumePath);
+        Task DeleteResumeAsync(int jobSeekerId);
+
         // Experience
         Task<Experience> AddExperienceAsync(int jobSeekerId, Experience experience);
         Task<Experience?> GetExperienceByIdAsync(int experienceId);

@@ -8,7 +8,7 @@ import { CardSkeleton } from '../../components/shared/Skeleton'
 import {
   Users, Search, X, ChevronDown, Briefcase,
   TrendingUp, Calendar, CirclePlus, Eye, Mail,
-  Phone, BookOpen, Star, Building2, Clock, MapPin
+  Phone, BookOpen, Star, Building2, Clock, MapPin, FileText
 } from 'lucide-react'
 /* ─────────────────────────────────────────────────────────
    Backend statuses: Applied, Reviewed, Shortlisted, Rejected, Accepted
@@ -456,6 +456,20 @@ function CandidateCard({ app, onStatusChange, updating, onView }) {
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800/40 hover:bg-brand-100 dark:hover:bg-brand-500/20 transition-all">
                 <Eye className="w-3.5 h-3.5" /> View
               </button>
+              {/* View Resume */}
+             {app.applicantResume && (
+  <a
+    href={`${import.meta.env.VITE_API_URL || 'https://localhost:7227'}/${app.applicantResume}`}
+    target="_blank"
+    rel="noreferrer"
+    className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-xl 
+    border border-emerald-200 dark:border-emerald-800/40 
+    text-emerald-600 dark:text-emerald-400 
+    hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all"
+  >
+    <FileText className="w-3.5 h-3.5" /> Resume
+  </a>
+)}
 
               {/* Shortlist quick */}
               {status !== 'Shortlisted' && status !== 'Accepted' && (

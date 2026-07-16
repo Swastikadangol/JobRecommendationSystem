@@ -17,7 +17,8 @@ namespace JobRecommendationAPI.Models
         public string FullName { get; set; } = string.Empty;
         public string? Phone { get; set; }
         //file path
-        //public string? Resume { get; set; }
+        public string? Resume { get; set; }
+
         // Comma-separated e.g. "Python,SQL,React"
         public string? Skills { get; set; }
 
