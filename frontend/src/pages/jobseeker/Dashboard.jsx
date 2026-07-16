@@ -198,7 +198,7 @@ export default function Dashboard() {
                 No matches yet
               </p>
               <p className="text-xs text-ink-light mb-4">
-                Add skills to your profile to get matched with jobs
+                Complete your profile to receive personalized job recommendations.
               </p>
               <Link to="/profile" className="btn-primary inline-flex">
                 Complete Profile

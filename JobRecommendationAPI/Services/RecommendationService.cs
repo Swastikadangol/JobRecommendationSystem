@@ -188,6 +188,12 @@ namespace JobRecommendationAPI.Services
             JobType? filterJobType = null,
             WorkMode? filterWorkMode = null)
         {
+            // User must have entered skills before getting recommendations
+            if (string.IsNullOrWhiteSpace(seekerSkills))
+            {
+                return new List<RecommendationResult>();
+            }
+
             var scored = allJobs
                 .Select(job =>
                 {
@@ -210,19 +216,19 @@ namespace JobRecommendationAPI.Services
                     double educationScore =
                         seekerEducation >= job.MinimumEducationLevel
                             ? 100
-                            : 50;
+                            : 0;
 
                     // 4. JOB TYPE SCORE
                     double jobTypeScore =
                         seekerJobType == job.JobType
                             ? 100
-                            : 60;
+                            : 0;
 
                     // 5. WORK MODE SCORE
                     double workModeScore =
                         seekerWorkMode == job.WorkMode
                             ? 100
-                            : 60;
+                            : 0;
 
                     // FINAL WEIGHTED SCORE
                     double finalScore =
