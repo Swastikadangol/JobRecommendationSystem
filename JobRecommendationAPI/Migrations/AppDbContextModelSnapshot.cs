@@ -54,6 +54,37 @@ namespace JobRecommendationAPI.Migrations
                     b.ToTable("Applications");
                 });
 
+            modelBuilder.Entity("JobRecommendationAPI.Models.Education", b =>
+                {
+                    b.Property<int>("EducationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EducationId"));
+
+                    b.Property<string>("FieldOfStudy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("GraduationYear")
+                        .HasColumnType("int");
+
+                    b.Property<string>("InstitutionName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("JobSeekerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.HasKey("EducationId");
+
+                    b.HasIndex("JobSeekerId");
+
+                    b.ToTable("Educations");
+                });
+
             modelBuilder.Entity("JobRecommendationAPI.Models.Employer", b =>
                 {
                     b.Property<int>("EmployerId")
@@ -315,6 +346,17 @@ namespace JobRecommendationAPI.Migrations
                     b.Navigation("JobSeeker");
                 });
 
+            modelBuilder.Entity("JobRecommendationAPI.Models.Education", b =>
+                {
+                    b.HasOne("JobRecommendationAPI.Models.JobSeeker", "JobSeeker")
+                        .WithMany("Educations")
+                        .HasForeignKey("JobSeekerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("JobSeeker");
+                });
+
             modelBuilder.Entity("JobRecommendationAPI.Models.Employer", b =>
                 {
                     b.HasOne("JobRecommendationAPI.Models.User", "User")
@@ -372,6 +414,8 @@ namespace JobRecommendationAPI.Migrations
             modelBuilder.Entity("JobRecommendationAPI.Models.JobSeeker", b =>
                 {
                     b.Navigation("Applications");
+
+                    b.Navigation("Educations");
 
                     b.Navigation("Experiences");
                 });

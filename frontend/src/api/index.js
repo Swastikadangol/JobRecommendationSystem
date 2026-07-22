@@ -58,11 +58,18 @@ export const jobSeekerApi = {
 
 deleteResume: (id) =>
   api.delete(`/api/jobseeker/profile/${id}/delete-resume`),
-
+generateCv: (id) => api.get(`/api/jobseeker/profile/${id}/generate-cv`, { responseType: 'blob' }),
   getExperiences: (id) => api.get(`/api/jobseeker/profile/${id}/experiences`),
   addExperience: (id, data) => api.post(`/api/jobseeker/profile/${id}/experience`, data),
   updateExperience: (expId, data) => api.put(`/api/jobseeker/experience/${expId}`, data),
   deleteExperience: (expId) => api.delete(`/api/jobseeker/experience/${expId}`),
+  
+  getEducations: (id) => api.get(`/api/jobseeker/profile/${id}/educations`),
+  addEducation: (id, data) => api.post(`/api/jobseeker/profile/${id}/education`, data),
+  updateEducation: (eduId, data) => api.put(`/api/jobseeker/education/${eduId}`, data),
+  deleteEducation: (eduId) => api.delete(`/api/jobseeker/education/${eduId}`),
+
+  
   getApprovedJobs: (id, params) =>
     api.get(`/api/jobseeker/jobs/${id}`, { params }), getRecommendations: (id, params) => api.get(`/api/jobseeker/recommendations/${id}`, { params }),
   apply: (data) => api.post('/api/jobseeker/apply', data),
@@ -85,6 +92,7 @@ export const employerApi = {
     JSON.stringify(status),
     { headers: { 'Content-Type': 'application/json' } }
   ),
+  getReports: (id) => api.get(`/api/employer/reports/${id}`)
 }
 // ───── AI ─────
 export const aiApi = {

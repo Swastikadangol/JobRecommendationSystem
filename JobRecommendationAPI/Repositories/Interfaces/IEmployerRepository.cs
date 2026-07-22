@@ -20,6 +20,8 @@
         Task<int> GetTotalApplicationsAsync(int employerId);
         Task<IEnumerable<Application>> GetApplicationsByEmployerAsync(int employerId);
 
+        Task<EmployerReportDto> GetEmployerReportAsync(int employerId);
+
 
 
 

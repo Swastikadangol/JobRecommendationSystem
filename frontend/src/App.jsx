@@ -7,39 +7,39 @@ import Sidebar from './components/shared/Sidebar'
 import ThemeToggle from './components/shared/ThemeToggle'
 
 // ── Shared pages ──
-import Landing      from './pages/shared/Landing'
-import Login        from './pages/shared/Login'
-import Register     from './pages/shared/Register'
+import Landing from './pages/shared/Landing'
+import Login from './pages/shared/Login'
+import Register from './pages/shared/Register'
 
 // ── Job Seeker pages ──
-import Dashboard       from './pages/jobseeker/Dashboard'
-import BrowseJobs      from './pages/jobseeker/BrowseJobs'
+import Dashboard from './pages/jobseeker/Dashboard'
+import BrowseJobs from './pages/jobseeker/BrowseJobs'
 import Recommendations from './pages/jobseeker/Recommendations'
-import Applications    from './pages/jobseeker/Applications'
-import Profile         from './pages/jobseeker/Profile'
-import JobDetail       from './pages/jobseeker/JobDetail'
+import Applications from './pages/jobseeker/Applications'
+import Profile from './pages/jobseeker/Profile'
+import JobDetail from './pages/jobseeker/JobDetail'
 
 // ── Employer pages ──
-import EmployerDashboard  from './pages/employer/EmployerDashboard'
-import EmployerJobs       from './pages/employer/EmployerJobs'
-import EmployerPostJob    from './pages/employer/EmployerPostJob'
-import EmployerEditJob    from './pages/employer/EmployerEditJob'
+import EmployerDashboard from './pages/employer/EmployerDashboard'
+import EmployerJobs from './pages/employer/EmployerJobs'
+import EmployerPostJob from './pages/employer/EmployerPostJob'
+import EmployerEditJob from './pages/employer/EmployerEditJob'
 import EmployerApplicants from './pages/employer/EmployerApplicants'
 import EmployerCandidates from './pages/employer/EmployerCandidates'
-import EmployerProfile    from './pages/employer/EmployerProfile'
-
+import EmployerProfile from './pages/employer/EmployerProfile'
+import EmployerReports from './pages/employer/EmployerReports'
 
 
 //admin
 import AdminDashboard from './pages/admin/AdminDashboard'
-import AdminJobs      from './pages/admin/AdminJobs'
-import AdminUsers     from './pages/admin/AdminUsers'
-import AdminEmployers     from './pages/admin/AdminEmployers'
+import AdminJobs from './pages/admin/AdminJobs'
+import AdminUsers from './pages/admin/AdminUsers'
+import AdminEmployers from './pages/admin/AdminEmployers'
 import AdminApplications from './pages/Admin/AdminApplications'
 import AdminReports from './pages/Admin/AdminReports'
 
 function AuthLogoutListener() {
-  const navigate   = useNavigate()
+  const navigate = useNavigate()
   const { logout } = useAuth()
   useEffect(() => {
     const handler = () => { logout(); navigate('/login', { replace: true }) }
@@ -84,9 +84,9 @@ function PublicOnly({ children }) {
   if (loading) return null
   if (user) {
     const r = user.role
-    if (r === 0 || r === 'JobSeeker') return <Navigate to="/dashboard"         replace />
-    if (r === 1 || r === 'Employer')  return <Navigate to="/employer/dashboard" replace />
-    return                                   <Navigate to="/admin/dashboard"    replace />
+    if (r === 0 || r === 'JobSeeker') return <Navigate to="/dashboard" replace />
+    if (r === 1 || r === 'Employer') return <Navigate to="/employer/dashboard" replace />
+    return <Navigate to="/admin/dashboard" replace />
   }
   return children
 }
@@ -101,38 +101,40 @@ export default function App() {
             <Routes>
 
               {/* ── Public ── */}
-              <Route path="/"         element={<PublicOnly><Landing  /></PublicOnly>} />
-              <Route path="/login"    element={<PublicOnly><Login    /></PublicOnly>} />
+              <Route path="/" element={<PublicOnly><Landing /></PublicOnly>} />
+              <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
               <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
 
               {/* ── Protected ── */}
               <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
 
                 {/* Job Seeker */}
-                <Route path="/dashboard"       element={<Dashboard      />} />
-                <Route path="/browse"          element={<BrowseJobs     />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/browse" element={<BrowseJobs />} />
                 <Route path="/recommendations" element={<Recommendations />} />
-                <Route path="/applications"    element={<Applications   />} />
-                <Route path="/profile"         element={<Profile        />} />
-                <Route path="/jobs/:id"        element={<JobDetail      />} />
+                <Route path="/applications" element={<Applications />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/jobs/:id" element={<JobDetail />} />
 
                 {/* Employer */}
-                <Route path="/employer/dashboard"              element={<EmployerDashboard  />} />
-                <Route path="/employer/jobs"                   element={<EmployerJobs       />} />
-                <Route path="/employer/post-job"               element={<EmployerPostJob    />} />
-                <Route path="/employer/jobs/:jobId/edit"       element={<EmployerEditJob    />} />
+                <Route path="/employer/dashboard" element={<EmployerDashboard />} />
+                <Route path="/employer/jobs" element={<EmployerJobs />} />
+                <Route path="/employer/post-job" element={<EmployerPostJob />} />
+                <Route path="/employer/jobs/:jobId/edit" element={<EmployerEditJob />} />
                 <Route path="/employer/jobs/:jobId/applicants" element={<EmployerApplicants />} />
-                <Route path="/employer/candidates"             element={<EmployerCandidates />} />
-                <Route path="/employer/profile"                element={<EmployerProfile    />} />
-
+                <Route path="/employer/candidates" element={<EmployerCandidates />} />
+                <Route path="/employer/profile" element={<EmployerProfile />} />
+                <Route path="/employer/reports"
+                  element={<EmployerReports />}
+                />
                 {/* Admin placeholder */}
                 {/* Admin */}
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                <Route path="/admin/jobs"      element={<AdminJobs      />} />
-                <Route path="/admin/users"     element={<AdminUsers     />} />
+                <Route path="/admin/jobs" element={<AdminJobs />} />
+                <Route path="/admin/users" element={<AdminUsers />} />
                 <Route path="/admin/employers" element={<AdminEmployers />} />
                 <Route path="/admin/applications" element={<AdminApplications />} />
-                <Route path="/admin/reports"      element={<AdminReports      />} />
+                <Route path="/admin/reports" element={<AdminReports />} />
               </Route>
 
               {/* Fallback */}

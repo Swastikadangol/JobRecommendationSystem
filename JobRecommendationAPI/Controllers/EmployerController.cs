@@ -257,5 +257,13 @@ namespace JobRecommendationAPI.Controllers
             if (!updated) return NotFound("Application not found.");
             return Ok($"Application status updated to {status}.");
         }
+
+        [HttpGet("reports/{employerId}")]
+        public async Task<IActionResult> GetEmployerReport(int employerId)
+        {
+            var report = await _empRepo.GetEmployerReportAsync(employerId);
+
+            return Ok(report);
+        }
     }
 }

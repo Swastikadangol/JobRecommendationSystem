@@ -49,24 +49,18 @@ export default function Applications() {
   /* ─────────────────────────────────────────
      Fetch applications on component mount
   ───────────────────────────────────────── */
-  useEffect(() => {
+useEffect(() => {
+  if (!user?.profileId) return
 
-    // Stop if profileId does not exist
-    if (!user?.profileId) return
+  jobSeekerApi.getApplications(user.profileId)
+    .then(r => {
+      console.log(r.data.data) // Check the data
+      setApps(r.data?.data || [])
+    })
+    .catch(() => {})
+    .finally(() => setLoading(false))
 
-    // Fetch applications
-    jobSeekerApi.getApplications(user.profileId)
-
-      // Save response data
-      .then(r => setApps(r.data?.data || []))
-
-      // Ignore errors silently
-      .catch(() => {})
-
-      // Stop loading
-      .finally(() => setLoading(false))
-
-  }, [user?.profileId])
+}, [user?.profileId])
 
   /* ─────────────────────────────────────────
      Sort applications by latest applied date

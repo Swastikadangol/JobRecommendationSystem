@@ -411,7 +411,7 @@ export default function JobDetail() {
         This puts Match Analysis and the Tip card in their own column
         to the right of Job Details on wide screens.
       */}
-      <div className="grid md:grid-cols-3 xl:grid-cols-4 gap-5 items-start">
+      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5 items-start">
 
         {/* ── LEFT: content ── */}
         <div className="md:col-span-2 xl:col-span-2 space-y-5">
@@ -602,23 +602,7 @@ export default function JobDetail() {
 
         </div>
 
-        {/* ── RIGHT: Match Analysis + Tip, own column on xl screens ── */}
-        <div className="space-y-5 xl:col-span-1 md:col-span-3">
-          {recommendation && <MatchAnalysisCard recommendation={recommendation} />}
-
-          {/* Tip */}
-          <div className="card bg-slate-50 dark:bg-slate-800/50 border-dashed border-slate-200 dark:border-slate-700">
-            <div className="flex items-start gap-2.5">
-              <Users className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-0.5">Tip</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
-                  Complete your profile with skills and experience to improve your match score with employers.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        
 
       </div>
 

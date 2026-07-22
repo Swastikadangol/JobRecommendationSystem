@@ -36,6 +36,7 @@ namespace JobRecommendationAPI.Models
         public ICollection<Application> Applications { get; set; } = new List<Application>();
         // Navigation — one jobseeker can have many experiences
         public ICollection<Experience> Experiences { get; set; } = new List<Experience>();
+        public ICollection<Education> Educations { get; set; } = new List<Education>();
 
     }
 }

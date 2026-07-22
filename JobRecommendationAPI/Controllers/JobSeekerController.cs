@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using System.IO;
 using ExperienceDto = JobRecommendationAPI.DTOs.Application.ExperienceDto;
+using EducationDto = JobRecommendationAPI.DTOs.Application.EducationDto;
+using JobRecommendationAPI.DTOs.Profile.JobSeeker.Education;
 
 namespace JobRecommendationAPI.Controllers
 {
@@ -347,6 +349,127 @@ namespace JobRecommendationAPI.Controllers
             return Ok(new { message = "Experience deleted successfully" });
         }
 
+        // ==================== EDUCATION CRUD ====================
+
+        [HttpPost("profile/{id}/education")]
+        public async Task<IActionResult> AddEducation(int id, [FromBody] EducationDto dto)
+        {
+            var profile = await _jsRepo.GetByIdAsync(id);
+            if (profile == null)
+                return NotFound(new { message = "Job seeker not found" });
+
+            var education = new Education
+            {
+                JobSeekerId = id,
+                InstitutionName = dto.InstitutionName,
+                FieldOfStudy = dto.FieldOfStudy,
+                Level = dto.Level,
+                GraduationYear = dto.GraduationYear
+            };
+
+            var result = await _jsRepo.AddEducationAsync(id, education);
+
+            // Keep JobSeeker.EducationLevel synced to the HIGHEST level across all entries
+            await SyncHighestEducationLevel(id);
+
+            return Ok(new
+            {
+                message = "Education added successfully",
+                education = new
+                {
+                    result.EducationId,
+                    result.InstitutionName,
+                    result.FieldOfStudy,
+                    result.Level,
+                    result.GraduationYear
+                }
+            });
+        }
+
+        [HttpGet("profile/{id}/educations")]
+        public async Task<IActionResult> GetEducations(int id)
+        {
+            var educations = await _jsRepo.GetEducationsByJobSeekerIdAsync(id);
+
+            var response = educations.Select(e => new EducationResponseDto
+            {
+                EducationId = e.EducationId,
+                InstitutionName = e.InstitutionName,
+                FieldOfStudy = e.FieldOfStudy,
+                Level = e.Level,
+                GraduationYear = e.GraduationYear
+            });
+
+            return Ok(response);
+        }
+
+        [HttpGet("education/{educationId}")]
+        public async Task<IActionResult> GetEducationById(int educationId)
+        {
+            var education = await _jsRepo.GetEducationByIdAsync(educationId);
+            if (education == null)
+                return NotFound(new { message = "Education not found" });
+
+            return Ok(new EducationResponseDto
+            {
+                EducationId = education.EducationId,
+                InstitutionName = education.InstitutionName,
+                FieldOfStudy = education.FieldOfStudy,
+                Level = education.Level,
+                GraduationYear = education.GraduationYear
+            });
+        }
+
+        [HttpPut("education/{educationId}")]
+        public async Task<IActionResult> UpdateEducation(int educationId, [FromBody] EducationDto dto)
+        {
+            var education = await _jsRepo.GetEducationByIdAsync(educationId);
+            if (education == null)
+                return NotFound(new { message = "Education not found" });
+
+            education.InstitutionName = dto.InstitutionName;
+            education.FieldOfStudy = dto.FieldOfStudy;
+            education.Level = dto.Level;
+            education.GraduationYear = dto.GraduationYear;
+
+            var result = await _jsRepo.UpdateEducationAsync(education);
+
+            // Keep JobSeeker.EducationLevel synced to the HIGHEST level across all entries
+            await SyncHighestEducationLevel(education.JobSeekerId);
+
+            return Ok(new
+            {
+                message = "Education updated successfully",
+                education = new EducationResponseDto
+                {
+                    EducationId = result.EducationId,
+                    InstitutionName = result.InstitutionName,
+                    FieldOfStudy = result.FieldOfStudy,
+                    Level = result.Level,
+                    GraduationYear = result.GraduationYear
+                }
+            });
+        }
+
+        [HttpDelete("education/{educationId}")]
+        public async Task<IActionResult> DeleteEducation(int educationId)
+        {
+            var education = await _jsRepo.GetEducationByIdAsync(educationId);
+            if (education == null)
+                return NotFound(new { message = "Education not found" });
+
+            var jobSeekerId = education.JobSeekerId;
+
+            var deleted = await _jsRepo.DeleteEducationAsync(educationId);
+            if (!deleted)
+                return NotFound(new { message = "Education not found" });
+
+            // Recalculate highest remaining level (or clear if none left)
+            await SyncHighestEducationLevel(jobSeekerId);
+
+            return Ok(new { message = "Education deleted successfully" });
+        }
+
         // ==================== JOB RECOMMENDATIONS ====================
 
         [HttpGet("recommendations/{id}")]
@@ -426,6 +549,10 @@ namespace JobRecommendationAPI.Controllers
                 job.RequiredSkills,
                 approvedJobs
             );
+
+            //Console.WriteLine($"Profile Skills: {profile.Skills}");
+            //Console.WriteLine($"Job Skills: {job.RequiredSkills}");
+            //Console.WriteLine($"Approved Jobs Count: {approvedJobs.Count()}");
             var application = new Application
             {
                 JobId = dto.JobId,
@@ -517,7 +644,31 @@ namespace JobRecommendationAPI.Controllers
             return (int)(totalMonths / 12);
         }
 
-       
+        [HttpGet("profile/{id}/generate-cv")]
+        public async Task<IActionResult> GenerateCv(int id)
+        {
+            var profile = await _jsRepo.GetByIdAsync(id);
+            if (profile == null)
+                return NotFound(new { message = "Profile not found" });
+
+            var pdfBytes = CvPdfBuilder.Build(profile);
+            var fileName = $"{(profile.FullName ?? "resume").Replace(" ", "_")}_CV.pdf";
+
+            return File(pdfBytes, "application/pdf", fileName);
+        }
+
+        private async Task SyncHighestEducationLevel(int jobSeekerId)
+        {
+            var educations = await _jsRepo.GetEducationsByJobSeekerIdAsync(jobSeekerId);
+            var profile = await _jsRepo.GetByIdAsync(jobSeekerId);
+            if (profile == null) return;
+
+            profile.EducationLevel = educations.Any()
+                ? educations.Max(e => e.Level)
+                : null;
+
+            await _jsRepo.UpdateAsync(profile);
+        }
 
     }
 }

@@ -8,6 +8,18 @@ import {
   Briefcase, Users, TrendingUp,
   ArrowRight, Building2, Clock, Sparkles
 } from 'lucide-react'
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid
+} from "recharts";
 
 export default function EmployerDashboard() {
   const { user }   = useAuth()
@@ -18,6 +30,14 @@ export default function EmployerDashboard() {
   const [jobs,        setJobs]        = useState([])
   const [loadingJobs, setLoadingJobs] = useState(true)
 
+  const [report, setReport] = useState(null)
+
+useEffect(() => {
+  if (!profileId) return
+
+  employerApi.getReports(profileId)
+    .then(r => setReport(r.data))
+}, [profileId])
   useEffect(() => {
   if (!profileId) return
 
@@ -33,10 +53,19 @@ export default function EmployerDashboard() {
   const hour     = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
-  const totalJobs       = jobs.length
-  const activeJobs      = jobs.filter(j => j.isActive !== false && !isExpired(j.deadline)).length
-  const totalApplicants = jobs.reduce((sum, j) => sum + (j.applicantCount ?? 0), 0)
-  const pendingJobs     = jobs.filter(j => j.jobStatus === 0 || j.jobStatus === 'Pending').length
+  const totalJobs = report?.totalJobs ?? jobs.length
+
+const activeJobs = report?.activeJobs ?? 0
+
+const pendingJobs = report?.pendingJobs ?? 0
+
+const expiredJobs = report?.expiredJobs ?? 0
+
+const totalApplicants = report?.totalApplications ?? 0;
+const avgApplicants =
+  totalJobs > 0
+    ? Math.round(totalApplicants / totalJobs)
+    : 0
 
   const recentJobs = [...jobs]
     .sort((a, b) => new Date(b.postedAt || 0) - new Date(a.postedAt || 0))
@@ -69,7 +98,51 @@ export default function EmployerDashboard() {
       bg:    'bg-amber-50 dark:bg-amber-500/10',
       sub:   pendingJobs > 0 ? `${pendingJobs} awaiting approval` : 'All jobs reviewed',
     },
+     {
+    label: 'Pending Jobs',
+    value: pendingJobs,
+    icon: Clock,
+    color: 'text-amber-600 dark:text-amber-400',
+    bg: 'bg-amber-50 dark:bg-amber-500/10',
+    sub: 'Awaiting approval'
+  },
+  {
+    label: 'Expired Jobs',
+    value: expiredJobs,
+    icon: Briefcase,
+    color: 'text-red-600 dark:text-red-400',
+    bg: 'bg-red-50 dark:bg-red-500/10',
+    sub: 'Deadline passed'
+  },
   ]
+ const jobStatusData = [
+  { name: "Active", value: activeJobs, fill: "#10b981" },
+  { name: "Pending", value: pendingJobs, fill: "#f59e0b" },
+  { name: "Expired", value: expiredJobs, fill: "#ef4444" },
+]
+
+const applicationStatusData = [
+  {
+    name: "Applied",
+    value: report?.appliedCandidates ?? 0,
+    fill: "#3b82f6",
+  },
+  {
+    name: "Shortlisted",
+    value: report?.shortlistedCandidates ?? 0,
+    fill: "#8b5cf6",
+  },
+  {
+    name: "Accepted",
+    value: report?.acceptedCandidates ?? 0,
+    fill: "#10b981",
+  },
+  {
+    name: "Rejected",
+    value: report?.rejectedCandidates ?? 0,
+    fill: "#ef4444",
+  },
+]
 
   return (
     <div className="animate-fadeIn space-y-6">
@@ -85,8 +158,7 @@ export default function EmployerDashboard() {
       </div>
 
       {/* ── Stats ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {loadingJobs
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">        {loadingJobs
           ? Array(3).fill(0).map((_, i) => <StatSkeleton key={i} />)
           : stats.map(s => (
             <div key={s.label} className="card">
@@ -107,8 +179,12 @@ export default function EmployerDashboard() {
         }
       </div>
 
+
+  
+
       {/* ── Main grid ── */}
       <div className="grid lg:grid-cols-5 gap-6">
+        
 
         {/* Recent listings */}
         <div className="lg:col-span-3 space-y-3">
@@ -150,57 +226,101 @@ export default function EmployerDashboard() {
           )}
         </div>
 
-        {/* Quick actions */}
-        <div className="lg:col-span-2 space-y-3">
-          <h2 className="section-title">Quick Actions</h2>
+       {/* Charts */}
+<div className="lg:col-span-2 space-y-5 pt-10">
 
-          {[
-            {
-              to:        '/employer/post-job',
-              icon:      Briefcase,
-              iconBg:    'bg-brand-50 dark:bg-brand-500/10',
-              iconColor: 'text-brand-600 dark:text-brand-400',
-              title:     'Post a New Job',
-              desc:      'Create a listing and start receiving applications',
-            },
-            {
-              to:        '/employer/jobs',
-              icon:      Building2,
-              iconBg:    'bg-emerald-50 dark:bg-emerald-500/10',
-              iconColor: 'text-emerald-600 dark:text-emerald-400',
-              title:     'Manage Listings',
-              desc:      'Edit, close or review your job postings',
-            },
-            {
-              to:        '/employer/profile',
-              icon:      Users,
-              iconBg:    'bg-amber-50 dark:bg-amber-500/10',
-              iconColor: 'text-amber-600 dark:text-amber-400',
-              title:     'Company Profile',
-              desc:      'Update your company details and contact info',
-            },
-          ].map(a => (
-            <Link key={a.to} to={a.to} className="card-hover flex items-center gap-4">
-              <div className={`w-10 h-10 rounded-xl ${a.iconBg} flex items-center justify-center flex-shrink-0`}>
-                <a.icon className={`w-5 h-5 ${a.iconColor}`} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm text-slate-900 dark:text-slate-100">{a.title}</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{a.desc}</p>
-              </div>
-              <ArrowRight className="w-4 h-4 text-slate-300 dark:text-slate-600 flex-shrink-0" />
-            </Link>
-          ))}
+  {/* Job Status */}
+  <div className="card">
+    <h2 className="section-title text-base">Job Status</h2>
+    <p className="text-xs text-slate-400 mb-1">
+      Distribution of your jobs
+    </p>
 
-          {!loadingJobs && pendingJobs > 0 && (
-            <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/40">
-              <Sparkles className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-amber-700 dark:text-amber-300">
-                <span className="font-semibold">{pendingJobs} job{pendingJobs > 1 ? 's' : ''}</span> awaiting admin approval.
-              </p>
-            </div>
-          )}
+    <ResponsiveContainer width="100%" height={210}>
+      <PieChart>
+       <Pie
+    data={jobStatusData}
+    dataKey="value"
+    nameKey="name"
+    innerRadius={40}
+    outerRadius={70}
+    label={({ name, value }) => `${name}: ${value}`}
+/>
+
+        <Tooltip />
+      </PieChart>
+    </ResponsiveContainer>
+
+    <div className="flex justify-center gap-5 mt-2 text-xs">
+      {jobStatusData.map(item => (
+        <div key={item.name} className="flex items-center gap-2">
+          <span
+            className="w-3 h-3 rounded-full"
+            style={{ background: item.fill }}
+          />
+          {item.name}
         </div>
+      ))}
+    </div>
+  </div>
+
+  {/* Application Status */}
+  <div className="card">
+    <h2 className="section-title text-base">Application Status</h2>
+    <p className="text-xs text-slate-400 mb-4">
+      Candidate application breakdown
+    </p>
+
+   <ResponsiveContainer width="100%" height={240}>
+  <BarChart
+    data={applicationStatusData}
+    margin={{ top: 5, right: 10, left: -10, bottom: 5 }}
+  >
+    <CartesianGrid strokeDasharray="3 3" />
+
+    <XAxis
+      dataKey="name"
+      tick={{ fontSize: 13 }}
+      axisLine={false}
+      tickLine={false}
+    />
+
+    <YAxis
+      allowDecimals={false}
+      tick={{ fontSize: 13 }}
+      axisLine={false}
+      tickLine={false}
+    />
+
+    <Tooltip
+      contentStyle={{
+        fontSize: "15px",
+        borderRadius: "8px",
+      }}
+      labelStyle={{
+        fontSize: "15px",
+      }}
+      itemStyle={{
+        fontSize: "15px",
+      }}
+    />
+
+    <Bar
+      dataKey="value"
+      radius={[6, 6, 0, 0]}
+    >
+      {applicationStatusData.map((item, index) => (
+        <Cell
+          key={index}
+          fill={item.fill}
+        />
+      ))}
+    </Bar>
+  </BarChart>
+</ResponsiveContainer>
+  </div>
+
+</div>
       </div>
     </div>
   )

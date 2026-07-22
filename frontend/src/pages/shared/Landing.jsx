@@ -46,8 +46,8 @@ export default function Landing() {
       </nav>
 
       {/* ── Hero ── */}
-      <section className="max-w-7xl mx-auto px-6 pt-20 pb-24">
-        <div className="grid lg:grid-cols-2 gap-10 items-center">
+      <section className="max-w-9xl mx-auto px-60 pt-20 pb-24">
+        <div className="grid lg:grid-cols-2 gap-96 items-center">
           {/* Left — copy */}
           <div>
             

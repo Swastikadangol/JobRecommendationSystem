@@ -25,6 +25,12 @@
         Task<Experience> UpdateExperienceAsync(Experience experience);
         Task<bool> DeleteExperienceAsync(int experienceId);
 
+        Task<Education> AddEducationAsync(int jobSeekerId, Education education);
+        Task<Education?> GetEducationByIdAsync(int educationId);
+        Task<IEnumerable<Education>> GetEducationsByJobSeekerIdAsync(int jobSeekerId);
+        Task<Education> UpdateEducationAsync(Education education);
+        Task<bool> DeleteEducationAsync(int educationId);
+
     }
 }
 

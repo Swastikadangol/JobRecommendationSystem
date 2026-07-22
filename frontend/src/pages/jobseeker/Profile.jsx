@@ -9,7 +9,7 @@ import {
 } from '../../utils/helpers'
 import {
   Phone, BookOpen, Briefcase, MapPin, Plus, Pencil, CircleAlert,
-  Trash2, Save, X, Calendar, Mail, Settings, ChevronRight, Upload, FileText
+  Trash2, Save, X, Calendar, Mail, Settings, ChevronRight, Upload, FileText, GraduationCap
 } from 'lucide-react'
 
 const EDUCATION_OPTS = [
@@ -124,6 +124,77 @@ function ExperienceModal({ exp, onSave, onClose }) {
           <button
             onClick={() => onSave(form)}
             disabled={!form.jobTitle || !form.companyName}
+            className="btn-primary flex-1 justify-center"
+          >
+            <Save className="w-4 h-4" /> Save
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Education Modal ───────────────────────────────────── */
+function EducationModal({ edu, onSave, onClose }) {
+  const [form, setForm] = useState({
+    institutionName: edu?.institutionName || '',
+    fieldOfStudy: edu?.fieldOfStudy || '',
+    level: edu?.level != null ? normalizeEnumValue(edu.level, EDUCATION_NAME_TO_VALUE) : '',
+    graduationYear: edu?.graduationYear ?? '',
+  })
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl dark:shadow-slate-900/80 w-full max-w-md animate-fadeIn">
+
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+          <h3 className="font-display font-semibold text-slate-900 dark:text-slate-100">
+            {edu ? 'Edit Education' : 'Add Education'}
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-4">
+          <div>
+            <label className="label">Institution *</label>
+            <input type="text" placeholder="Tribhuvan University" className="input"
+              value={form.institutionName}
+              onChange={e => setForm({ ...form, institutionName: e.target.value })} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Field of Study</label>
+              <input type="text" placeholder="Computer Science" className="input"
+                value={form.fieldOfStudy}
+                onChange={e => setForm({ ...form, fieldOfStudy: e.target.value })} />
+            </div>
+            <div>
+              <label className="label">Level *</label>
+              <select className="input" value={form.level}
+                onChange={e => setForm({ ...form, level: e.target.value })}>
+                <option value="">Select</option>
+                {EDUCATION_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="label">Graduation Year</label>
+            <input type="number" placeholder="2023" className="input"
+              value={form.graduationYear}
+              onChange={e => setForm({ ...form, graduationYear: e.target.value })} />
+          </div>
+        </div>
+
+        <div className="flex gap-3 px-5 py-4 border-t border-slate-100 dark:border-slate-800">
+          <button onClick={onClose} className="btn-outline flex-1 justify-center">Cancel</button>
+          <button
+            onClick={() => onSave(form)}
+            disabled={!form.institutionName || form.level === ''}
             className="btn-primary flex-1 justify-center"
           >
             <Save className="w-4 h-4" /> Save
@@ -259,7 +330,7 @@ function DeleteResumeModal({ onConfirm, onCancel }) {
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-xs p-6 text-center">
-        
+
         <CircleAlert className="w-10 h-10 text-red-500 mx-auto mb-3" />
 
         <h3 className="font-semibold mb-1">
@@ -305,18 +376,26 @@ export default function Profile() {
   const [showExpModal, setShowExpModal] = useState(false)
   const [editingExp, setEditingExp] = useState(null)
 
+  const [educations, setEducations] = useState([])
+  const [showEduModal, setShowEduModal] = useState(false)
+  const [editingEdu, setEditingEdu] = useState(null)
+
   const [resumeFile, setResumeFile] = useState(null)
   const [uploadingResume, setUploadingResume] = useState(false)
   const [showDeleteResume, setShowDeleteResume] = useState(false)
+  const [generatingCv, setGeneratingCv] = useState(false)
+
   useEffect(() => {
     if (!profileId) return
     Promise.all([
       jobSeekerApi.getProfile(profileId),
       jobSeekerApi.getExperiences(profileId),
+      jobSeekerApi.getEducations(profileId),
     ])
-      .then(([pRes, eRes]) => {
+      .then(([pRes, eRes, eduRes]) => {
         setProfile(pRes.data)
         setExperiences(eRes.data || [])
+        setEducations(eduRes.data || [])
       })
       .catch(() => { })
       .finally(() => setLoading(false))
@@ -384,6 +463,48 @@ export default function Profile() {
     }
   }
 
+  const handleSaveEdu = async (eduForm) => {
+  try {
+    const payload = {
+      institutionName: eduForm.institutionName,
+      fieldOfStudy: eduForm.fieldOfStudy,
+      level: parseInt(eduForm.level),
+      graduationYear: eduForm.graduationYear ? parseInt(eduForm.graduationYear) : null,
+    }
+    if (editingEdu) {
+      await jobSeekerApi.updateEducation(editingEdu.educationId, payload)
+      setEducations(prev => prev.map(e =>
+        e.educationId === editingEdu.educationId ? { ...e, ...payload } : e
+      ))
+      addToast('Education updated!', 'success')
+    } else {
+      const { data } = await jobSeekerApi.addEducation(profileId, payload)
+      setEducations(prev => [...prev, data.education || { ...payload, educationId: Date.now() }])
+      addToast('Education added!', 'success')
+    }
+
+    // Keep local profile state in sync — backend just updated JobSeeker.EducationLevel too
+    setProfile(prev => ({ ...prev, educationLevel: payload.level }))
+
+  } catch {
+    addToast('Failed to save education', 'error')
+  } finally {
+    setShowEduModal(false)
+    setEditingEdu(null)
+  }
+}
+
+  const handleDeleteEdu = async (eduId) => {
+    if (!confirm('Delete this education entry?')) return
+    try {
+      await jobSeekerApi.deleteEducation(eduId)
+      setEducations(prev => prev.filter(e => e.educationId !== eduId))
+      addToast('Education removed', 'success')
+    } catch {
+      addToast('Failed to delete', 'error')
+    }
+  }
+
   const handleUploadResume = async () => {
     if (!resumeFile) {
       addToast("Please select a resume.", "error")
@@ -435,6 +556,27 @@ export default function Profile() {
       </div>
     )
   }
+
+  const handleGenerateCv = async () => {
+  setGeneratingCv(true)
+  try {
+    const response = await jobSeekerApi.generateCv(profileId)
+    const blob = new Blob([response.data], { type: 'application/pdf' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${(profile?.fullName || 'resume').replace(/\s+/g, '_')}_CV.pdf`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+    addToast('CV generated successfully!', 'success')
+  } catch {
+    addToast('Failed to generate CV', 'error')
+  } finally {
+    setGeneratingCv(false)
+  }
+}
 
   const name = profile?.fullName || user?.userName || 'User'
   const colorCls = avatarColor(name)
@@ -586,6 +728,19 @@ export default function Profile() {
           <h2 className="font-display font-semibold">
             Resume / CV
           </h2>
+          <button
+      onClick={handleGenerateCv}
+      disabled={generatingCv}
+      className="btn-outline text-xs py-1.5"
+    >
+      {generatingCv ? (
+        <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70" />
+        </svg>
+      ) : (
+        <><FileText className="w-3.5 h-3.5" /> Generate CV</>
+      )}
+    </button>
         </div>
 
         {profile?.resume ? (
@@ -639,6 +794,7 @@ export default function Profile() {
 
           </div>
         )}
+        
       </div>
 
       {/* ── Experience ── */}
@@ -726,6 +882,75 @@ export default function Profile() {
         )}
       </div>
 
+      {/* ── Education ── */}
+      <div className="card">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-display font-semibold text-slate-900 dark:text-slate-100">Education</h2>
+          <button
+            onClick={() => { setEditingEdu(null); setShowEduModal(true) }}
+            className="btn-outline text-xs py-1.5"
+          >
+            <Plus className="w-3.5 h-3.5" /> Add
+          </button>
+        </div>
+
+        {educations.length === 0 ? (
+          <div className="text-center py-8 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
+            <GraduationCap className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">No education added yet</p>
+            <button
+              onClick={() => { setEditingEdu(null); setShowEduModal(true) }}
+              className="btn-outline text-xs py-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" /> Add education
+            </button>
+          </div>
+        ) : (
+          <div>
+            {educations.map((edu, idx) => (
+              <div key={edu.educationId}>
+                {idx > 0 && <div className="border-t border-slate-100 dark:border-slate-800 my-4" />}
+                <div className="flex items-start gap-4">
+                  <div className="w-9 h-9 rounded-xl bg-brand-100 dark:bg-brand-900 border border-brand-100 dark:border-brand-900 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <GraduationCap className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-semibold text-slate-900 dark:text-slate-100">
+                          {educationLabel(edu.level)}{edu.fieldOfStudy ? ` in ${edu.fieldOfStudy}` : ''}
+                        </p>
+                        <p className="text-sm text-brand-600 dark:text-brand-400 font-medium">{edu.institutionName}</p>
+                        {edu.graduationYear && (
+                          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 flex items-center gap-1">
+                            <Calendar className="w-3 h-3" /> {edu.graduationYear}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-1 flex-shrink-0">
+                        <button
+                          onClick={() => { setEditingEdu(edu); setShowEduModal(true) }}
+                          className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-colors"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteEdu(edu.educationId)}
+                          className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Modals */}
       {showEditModal &&
         createPortal(
@@ -747,6 +972,19 @@ export default function Profile() {
             onClose={() => {
               setShowExpModal(false)
               setEditingExp(null)
+            }}
+          />,
+          document.body
+        )
+      }
+      {showEduModal &&
+        createPortal(
+          <EducationModal
+            edu={editingEdu}
+            onSave={handleSaveEdu}
+            onClose={() => {
+              setShowEduModal(false)
+              setEditingEdu(null)
             }}
           />,
           document.body

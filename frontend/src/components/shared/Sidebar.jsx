@@ -23,6 +23,8 @@ const NAV_BY_ROLE = {
     { to: '/employer/jobs',       icon: Briefcase,       label: 'My Jobs'        },
     { to: '/employer/candidates', icon: UserCheck,       label: 'Candidates'     },
     { to: '/employer/profile',    icon: Building2,       label: 'Company Profile'},
+    { to: '/employer/reports',      icon: BarChart2,       label: 'Reports'      },
+
   ],
   Admin: [
     { to: '/admin/dashboard',    icon: LayoutDashboard, label: 'Dashboard'    },

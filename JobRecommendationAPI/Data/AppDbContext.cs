@@ -17,6 +17,7 @@ namespace JobRecommendationAPI.Data
         public DbSet<Experience> Experiences { get; set; }
         public DbSet<Job> Jobs { get; set; }
         public DbSet<Application> Applications { get; set; }
+        public DbSet<Education> Educations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -74,8 +75,12 @@ namespace JobRecommendationAPI.Data
                 .Property(u => u.Status)
                 .HasConversion<string>();
 
-            
 
+            modelBuilder.Entity<JobSeeker>()
+    .HasMany(js => js.Educations)
+    .WithOne(e => e.JobSeeker)
+    .HasForeignKey(e => e.JobSeekerId)
+    .OnDelete(DeleteBehavior.Cascade);
         }
 
 

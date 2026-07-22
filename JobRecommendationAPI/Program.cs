@@ -5,6 +5,8 @@ using JobRecommendationAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;               
+using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -37,7 +39,33 @@ builder.Services.AddControllers()
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT token below (no need to type 'Bearer' prefix)"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
 
 // CORS - Allow any frontend (React, Angular, etc.)
 builder.Services.AddCors(options =>
@@ -93,6 +121,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 // Swagger UI
 if (app.Environment.IsDevelopment())
 {

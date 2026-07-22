@@ -18,6 +18,7 @@ namespace JobRecommendationAPI.Repositories.Implementation
             await _db.JobSeekers
             .Include(js => js.User)
             .Include(js => js.Experiences)
+            .Include(js => js.Educations)
             .FirstOrDefaultAsync(js => js.JobSeekerId == jobseekerId);
 
         //find jobseeker by their linked user account id, inclcudes user data
@@ -25,6 +26,7 @@ namespace JobRecommendationAPI.Repositories.Implementation
             await _db.JobSeekers
             .Include(js => js.User)
             .Include(js => js.Experiences)
+            .Include(js => js.Educations)
             .FirstOrDefaultAsync(js => js.UserId == userId);
 
         //create a new jobseeker to db and reurn saved entity
@@ -103,6 +105,45 @@ namespace JobRecommendationAPI.Repositories.Implementation
             var exp = await _db.Experiences.FindAsync(experienceId);
             if (exp == null) return false;
             _db.Experiences.Remove(exp);
+            await _db.SaveChangesAsync();
+            return true;
+        }
+
+        // ── Education ──────────────────────────────────────────────
+
+        public async Task<Education> AddEducationAsync(int jobSeekerId, Education education)
+        {
+            education.JobSeekerId = jobSeekerId;
+
+            _db.Educations.Add(education);
+            await _db.SaveChangesAsync();
+            return education;
+        }
+
+        public async Task<Education?> GetEducationByIdAsync(int educationId) =>
+            await _db.Educations.FindAsync(educationId);
+
+        public async Task<IEnumerable<Education>> GetEducationsByJobSeekerIdAsync(int jobSeekerId)
+        {
+            return await _db.Educations
+                .Where(e => e.JobSeekerId == jobSeekerId)
+                .OrderByDescending(e => e.GraduationYear)
+                .ToListAsync();
+        }
+
+        public async Task<Education> UpdateEducationAsync(Education education)
+        {
+            _db.Educations.Update(education);
+            await _db.SaveChangesAsync();
+            return education;
+        }
+
+        public async Task<bool> DeleteEducationAsync(int educationId)
+        {
+            var edu = await _db.Educations.FindAsync(educationId);
+            if (edu == null) return false;
+
+            _db.Educations.Remove(edu);
             await _db.SaveChangesAsync();
             return true;
         }
