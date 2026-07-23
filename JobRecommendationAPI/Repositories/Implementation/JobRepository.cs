@@ -85,9 +85,10 @@ namespace JobRecommendationAPI.Repositories.Implementation
 
         //fetch the job posted by the specific employer find using employer id 
         public async Task<IEnumerable<Job>> GetByEmployerAsync(int employerId) =>
-      await _db.Jobs
-          .Where(j => j.EmployerId == employerId && j.IsActive)
-          .ToListAsync();
+    await _db.Jobs
+        .Where(j => j.EmployerId == employerId)
+        .OrderByDescending(j => j.PostedAt)
+        .ToListAsync();
 
         //search job
         public async Task<IEnumerable<Job>> SearchAsync(string keyword)

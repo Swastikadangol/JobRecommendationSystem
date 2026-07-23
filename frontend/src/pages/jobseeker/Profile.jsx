@@ -784,6 +784,7 @@ export default function Profile() {
               onClick={handleUploadResume}
               disabled={uploadingResume}
               className="btn-primary"
+              
             >
               <Upload className="w-4 h-4" />
 
